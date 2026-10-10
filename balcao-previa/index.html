@@ -62,7 +62,7 @@ video{width:100%;border-radius:14px;background:#000;aspect-ratio:1;object-fit:co
     <button class="sair" id="sair" type="button" hidden>Sair</button>
   </header>
   <div style="background:#fff3cd;color:#5c4400;border:2px dashed #c79100;border-radius:12px;padding:10px 12px;margin:0 0 14px;font-size:.9rem;line-height:1.4">
-    <b>PRÉVIA para revisão</b>: dados de exemplo, nada é gravado. Senha: qualquer uma com 4 dígitos (ex.: 1234).<br>
+    <b>PRÉVIA para revisão (v2)</b>: dados de exemplo, nada é gravado. Senha: qualquer uma com 4 dígitos (ex.: 1234).<br>
     Toque para testar:
     <span style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
       <button type="button" class="sec" style="width:auto;padding:8px 12px;background:#fff;color:#14100c;border:1.5px solid #14100c;font-weight:700;font-size:.9rem" onclick="document.getElementById('codigo').value='XB-VALID1';document.getElementById('conferir').click()">Cupom válido</button>
@@ -129,6 +129,7 @@ video{width:100%;border-radius:14px;background:#000;aspect-ratio:1;object-fit:co
   var usados={};
   var base={
     'VALID1':{estado:'valido',nome:'Maria S.',tel_final:'4321',valido_ate_dia:'17/10',pct:5},
+    'TESTE1':{estado:'valido',nome:'Cliente de teste',tel_final:'0000',valido_ate_dia:'17/10',pct:5},
     'USADO1':{estado:'usado',nome:'João P.',usado_em:new Date(Date.now()-3600e3*3).toISOString(),pct:5},
     'VENCI1':{estado:'vencido',nome:'Ana L.',valido_ate_dia:'05/10',pct:5}
   };
@@ -138,7 +139,7 @@ video{width:100%;border-radius:14px;background:#000;aspect-ratio:1;object-fit:co
     if(c==='XXXXXX') return {ok:true};
     var r=base[c]; if(!r) return {ok:true,estado:'inexistente'};
     r=JSON.parse(JSON.stringify(r));
-    if(c==='VALID1'){ if(usados[c]){ r.estado='usado'; r.usado_em=new Date().toISOString() } else if(p.get('acao')==='usar'){ usados[c]=1; r.estado='usado_agora' } }
+    if(c==='VALID1'||c==='TESTE1'){ if(usados[c]){ r.estado='usado'; r.usado_em=new Date().toISOString() } else if(p.get('acao')==='usar'){ usados[c]=1; r.estado='usado_agora' } }
     r.ok=true; return r;
   }
   window.fetch=function(u){ var q=String(u).split('?')[1]||''; return new Promise(function(ok){ setTimeout(function(){ ok({json:function(){return Promise.resolve(resp(q))}}) },350) }) };
