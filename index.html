@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#0a0b0c">
+<link rel="icon" href="data:,">
 <title>Cadastro Cliente X Bebidas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap">
@@ -210,6 +211,17 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
 .zap{display:flex;align-items:center;justify-content:center;gap:10px;line-height:1;min-height:56px}
 .zap .wa{flex:none}
 .convite{margin-top:18px;padding-top:16px;border-top:1px dashed var(--line)}
+
+::placeholder{color:#8e949a;opacity:1}
+.back{min-height:44px;display:inline-flex;align-items:center}
+summary{min-height:44px;display:flex;align-items:center}
+.zap{gap:12px;padding:10px 16px}
+.zap .wa{width:30px;height:30px;flex:none}
+.zap .zt{display:flex;flex-direction:column;align-items:flex-start;line-height:1.15;text-align:left}
+.zap .zt small{font-size:.8rem;font-weight:600;opacity:.85}
+.zap .zt b{font-size:1.08rem;font-weight:800}
+.lista li{min-height:46px}
+@media (max-width:860px){.lista{top:auto;bottom:calc(100% + 6px);max-height:46vh;overflow:auto}}
 </style>
 
 <div class="wrap">
@@ -330,7 +342,7 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
     {n:'Vodka ou Gin', c:'Vodka ou Gin'},
     {n:'Outra bebida', c:'Outra', outra:true}
   ];
-  var ORIGENS = {qr:1, instagram:1, whatsapp:1, link:1};
+  var ORIGENS = {qr:1, instagram:1, whatsapp:1, link:1, balcao:1};
   var $ = function(s){return document.querySelector(s)};
   var tok = (location.hash||'').replace('#','').toLowerCase();
   var origem = ORIGENS[tok] ? tok : 'link';
@@ -361,7 +373,7 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
       var tk=nq.split(' ').filter(Boolean);
       var m=lista.filter(function(o){var t=nrm2(o.m+' '+o.a);return tk.every(function(w){return t.indexOf(w)>=0})});
       if(nq){m=m.map(function(o,i){return {o:o,i:i,p:nrm2(o.m).indexOf(nq)===0?0:1}});m.sort(function(a,b){return a.p-b.p||a.i-b.i});m=m.map(function(x){return x.o})}
-      itens=m.slice(0,6); ativo=-1;
+      itens=m.slice(0,5); ativo=-1;
       var h=itens.map(function(s,i){return '<li role="option" id="'+ul.id+i+'" data-i="'+i+'" aria-selected="false"><span>'+dest2(s.m,nq)+'</span></li>'}).join('');
       if(q&&!itens.some(function(s){return nrm2(s.m)===nq||nrm2(s.a)===nq}))
         h+='<li role="option" class="livre" data-livre="1" aria-selected="false"><span>Usar o que escrevi: <b>'+esc(q)+'</b></span></li>';
@@ -378,6 +390,11 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
       if(e.key==='ArrowDown'){marca(ativo+1);e.preventDefault()}
       else if(e.key==='ArrowUp'){marca(ativo-1);e.preventDefault()}
       else if(e.key==='Enter'&&ativo>=0){var li=ul.querySelectorAll('li')[ativo];escolhe(li.dataset.livre?inp.value.trim():itens[+li.dataset.i]);e.preventDefault()}
+      else if(e.key==='Enter'&&ativo<0){
+        var t=inp.value.trim(), nt=nrm2(t), ig=null;
+        itens.forEach(function(o){ if(nrm2(o.m)===nt||nrm2(o.a)===nt) ig=o });
+        if(t.length>=3){ escolhe(ig||t) } e.preventDefault()
+      }
       else if(e.key==='Escape'||e.key==='Tab'){fecha()}
     });
     ul.addEventListener('mousedown',function(e){e.preventDefault()});
@@ -420,7 +437,7 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
     var sp=document.querySelector('label[for=ok2] span');
     if(GRUPO_TIPO==='canal') sp.innerHTML='Quero seguir o canal de ofertas no WhatsApp.<small>Opcional. Você deixa de seguir quando quiser.</small>';
     else sp.innerHTML='Quero entrar no grupo de <b>promoções e ações exclusivas</b> do WhatsApp.<small>Opcional. Seu número fica visível aos outros participantes. Você sai quando quiser.</small>';
-    $('#grupoLink').innerHTML = '<svg class="wa" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.100-1.300A10 10 0 1 0 12 2zm4.900 13.600c-.2.600-1.200 1.100-1.700 1.200-.5.100-1 .1-3.200-.8-2.700-1.100-4.400-3.800-4.600-4-.1-.2-1.100-1.500-1.100-2.800s.7-2 1-2.300c.2-.3.500-.3.700-.3h.5c.2 0 .4 0 .6.500l.8 2c.1.2.1.3 0 .5l-.4.600-.4.400c-.1.100-.3.300-.1.600.7 1.100 1.600 2 2.800 2.600.3.200.5.100.6-.1l.7-.9c.2-.2.400-.2.600-.1l1.900.9c.2.100.4.200.4.300.1.400.1.900-.1 1.400z"/></svg> <span>'+(GRUPO_TIPO==='canal' ? 'Seguir o canal do WhatsApp' : 'Entrar no grupo do WhatsApp')+'</span>';
+    $('#grupoLink').innerHTML = '<svg class="wa" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" focusable="false" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg> <span class="zt"><small>'+(GRUPO_TIPO==='canal' ? 'Seguir o canal' : 'Entrar no grupo')+'</small><b>Clientes X Bebidas</b></span>';
   })();
   (function(){var b=$('#beb'),ex=['Ex.: Heineken long neck','Ex.: Coca-Cola 2 L','Ex.: Cerveja Amstel'],i=0;setInterval(function(){if(b.value||document.activeElement===b)return;i=(i+1)%ex.length;b.placeholder=ex[i]},2600)})();
 
@@ -503,7 +520,7 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
   }
   $('#f').addEventListener('submit',function(ev){
     ev.preventDefault();
-    var nome=$('#nome').value.trim().replace(/\s+/g,' '), tel=$('#tel').value.replace(/\D/g,''),
+    var nome=$('#nome').value.replace(/[<>]/g,'').trim().replace(/\s+/g,' '), tel=$('#tel').value.replace(/\D/g,''),
         ok1=$('#ok1').checked, ok2=$('#ok2').checked, nasc=lerNasc($('#nasc').value.trim());
     ['nome','nasc','tel','ok1'].forEach(function(k){err(k,'')});
     var primeiro=null, bad=function(id,m){err(id,m);if(!primeiro)primeiro=id};
@@ -530,7 +547,7 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
       /* envio automático ao mostrar o cupom; se falhar, o botão volta para o cliente concluir */
       var volta=function(){link.href=url;link.hidden=false;nota.textContent='Toque para concluir o cadastro.'};
       try{
-        fetch(url,{mode:'no-cors',keepalive:true}).then(function(){nota.textContent='Cadastro enviado.'}).catch(volta);
+        fetch(url,{mode:'no-cors',keepalive:true}).then(function(){nota.textContent='Cadastro enviado.'; guardaCadastro(primeiroNome)}).catch(volta);
       }catch(x){volta()}
     } else {
       nota.textContent='Modo de teste: o envio ainda não foi ligado à planilha da loja.'
@@ -541,7 +558,6 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
     $('#tWhat').textContent='em toda a sua primeira compra';
     $('#tLim').textContent='Válido até '+fmtDia(vd)+' · exceto cigarros';
     $('#tVal').textContent='Uso único, após o cadastro';
-    if(EXEC_URL) guardaCadastro(primeiroNome);
     $('#f').reset();
     passo('s3');
     };
