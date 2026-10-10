@@ -207,6 +207,9 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
 .convite b{color:var(--gold2)}
 .avisoGrupo{margin-top:6px;padding:10px 12px;border-radius:12px;background:rgba(37,211,102,.10);border:1px solid rgba(37,211,102,.45);color:var(--ink);font-size:.9rem;line-height:1.35}
 .avisoGrupo b{color:#5be08d}
+.zap{display:flex;align-items:center;justify-content:center;gap:10px;line-height:1;min-height:56px}
+.zap .wa{flex:none}
+.convite{margin-top:18px;padding-top:16px;border-top:1px dashed var(--line)}
 </style>
 
 <div class="wrap">
@@ -282,7 +285,7 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
           <div class="info"><span id="tLim"></span><span id="tVal"></span><span>Diga o seu <b>celular</b> no caixa ou no drive-thru</span></div>
         </div>
         <p class="print">Tire um print deste cupom para guardar.</p>
-        <p class="convite" id="conviteGrupo" hidden><b>Promoções e ações exclusivas</b> chegam primeiro no nosso grupo do WhatsApp.</p>
+        <p class="convite" id="conviteGrupo" hidden><b>Ações e promoções exclusivas</b> para clientes no nosso grupo do WhatsApp.</p>
         <a id="grupoLink" class="go zap" target="_blank" rel="noopener" href="#" hidden>Entrar no grupo de ofertas</a>
         <a id="confirmaLink" class="go confirma" target="_blank" rel="noopener" href="#" hidden>Enviar meu cadastro</a>
         <p class="nota" id="confirmaNota"></p>
@@ -408,7 +411,7 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
     var sp=document.querySelector('label[for=ok2] span');
     if(GRUPO_TIPO==='canal') sp.innerHTML='Quero seguir o canal de ofertas no WhatsApp.<small>Opcional. Você deixa de seguir quando quiser.</small>';
     else sp.innerHTML='Quero entrar no grupo de <b>promoções e ações exclusivas</b> do WhatsApp.<small>Opcional. Seu número fica visível aos outros participantes. Você sai quando quiser.</small>';
-    $('#grupoLink').textContent = GRUPO_TIPO==='canal' ? 'Seguir o canal de promoções' : 'Entrar no grupo de promoções';
+    $('#grupoLink').innerHTML = '<svg class="wa" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.100-1.300A10 10 0 1 0 12 2zm4.900 13.600c-.2.600-1.200 1.100-1.700 1.200-.5.100-1 .1-3.200-.8-2.700-1.100-4.400-3.800-4.600-4-.1-.2-1.100-1.500-1.100-2.800s.7-2 1-2.300c.2-.3.500-.3.700-.3h.5c.2 0 .4 0 .6.500l.8 2c.1.2.1.3 0 .5l-.4.600-.4.400c-.1.100-.3.300-.1.600.7 1.100 1.600 2 2.800 2.600.3.200.5.100.6-.1l.7-.9c.2-.2.400-.2.600-.1l1.900.9c.2.100.4.200.4.300.1.400.1.900-.1 1.400z"/></svg> <span>'+(GRUPO_TIPO==='canal' ? 'Seguir o canal do WhatsApp' : 'Entrar no grupo do WhatsApp')+'</span>';
   })();
   (function(){var b=$('#beb'),ex=['Ex.: Heineken long neck','Ex.: Coca-Cola 2 L','Ex.: Cerveja Amstel'],i=0;setInterval(function(){if(b.value||document.activeElement===b)return;i=(i+1)%ex.length;b.placeholder=ex[i]},2600)})();
 
@@ -456,7 +459,6 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
     var gl=$('#grupoLink'); gl.hidden=true;
     var vaiGrupo = !!(ok2 && GRUPO_URL);
     if(GRUPO_URL){ gl.href=GRUPO_URL; gl.hidden=false; var cv=$('#conviteGrupo'); cv.hidden=false;
-      cv.innerHTML = ok2 ? '<b>Falta só um toque:</b> entre no grupo de promoções e ações exclusivas do WhatsApp.' : '<b>Promoções e ações exclusivas</b> chegam primeiro no nosso grupo do WhatsApp.';
       gl.classList.toggle('pulse',!!ok2) }else{ $('#conviteGrupo').hidden=true }
     var link=$('#confirmaLink'), nota=$('#confirmaNota');
     link.hidden=true; link.href='#'; nota.textContent='';
