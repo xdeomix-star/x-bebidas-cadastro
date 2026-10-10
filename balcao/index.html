@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0a0b0c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Balcão X">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Balcão X Bebidas</title>
+<style>
+:root{--bg:#0a0b0c;--card:#15181b;--line:#2b3035;--ink:#f8f3e9;--muted:#aaa59a;--gold:#ff6600;--teal:#2bd6c8;--ok:#1fbf5b;--bad:#e5484d;--warn:#f5a524}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-text-size-adjust:100%}
+body{min-height:100vh;padding:env(safe-area-inset-top) 16px calc(24px + env(safe-area-inset-bottom))}
+main{max-width:520px;margin:0 auto}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+header h1{font-size:1.05rem;margin:0;letter-spacing:.02em}
+header h1 b{color:var(--gold)}
+.sair{background:none;border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:8px 12px;font:inherit;font-size:.85rem;min-height:44px}
+section{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin-top:14px}
+h2{font-size:1rem;margin:0 0 12px;color:var(--muted);font-weight:600}
+label{display:block;font-size:.85rem;color:var(--muted);margin:10px 0 6px}
+input{width:100%;font:inherit;font-size:1.15rem;color:var(--ink);background:#0d0f10;border:1.5px solid var(--line);border-radius:12px;padding:14px;min-height:56px}
+input:focus{outline:0;border-color:var(--teal);box-shadow:0 0 0 3px rgba(43,214,200,.18)}
+.cod{text-transform:uppercase;letter-spacing:.12em;font-weight:700}
+button.go{width:100%;min-height:60px;border:0;border-radius:14px;font:inherit;font-size:1.1rem;font-weight:800;color:#1a0b00;background:linear-gradient(180deg,#ff8a3d,#ff6600);margin-top:12px}
+button.sec{width:100%;min-height:56px;border:1.5px solid var(--line);border-radius:14px;font:inherit;font-size:1rem;font-weight:700;color:var(--ink);background:transparent;margin-top:10px}
+button:disabled{opacity:.5}
+.linha{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+video{width:100%;border-radius:14px;background:#000;aspect-ratio:1;object-fit:cover}
+.res{border-radius:18px;padding:20px;margin-top:14px;text-align:center}
+.res.valido,.res.usado_agora{background:rgba(31,191,91,.14);border:2px solid var(--ok)}
+.res.usado,.res.inexistente{background:rgba(229,72,77,.14);border:2px solid var(--bad)}
+.res.vencido{background:rgba(245,165,36,.14);border:2px solid var(--warn)}
+.res .st{font-size:1.6rem;font-weight:900;letter-spacing:.02em}
+.res.valido .st,.res.usado_agora .st{color:var(--ok)}
+.res.usado .st,.res.inexistente .st{color:var(--bad)}
+.res.vencido .st{color:var(--warn)}
+.res .nome{font-size:1.5rem;font-weight:800;margin-top:8px}
+.res .det{color:var(--muted);margin-top:6px;line-height:1.5}
+.res .reg{margin-top:12px;font-size:1.05rem;line-height:1.5}
+.res .reg b{color:var(--gold)}
+.hist{list-style:none;margin:0;padding:0}
+.hist li{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:.92rem}
+.hist li:first-child{border-top:0}
+.hist .e-valido,.hist .e-usado_agora{color:var(--ok)}
+.hist .e-usado,.hist .e-inexistente{color:var(--bad)}
+.hist .e-vencido{color:var(--warn)}
+.msg{color:var(--muted);font-size:.9rem;line-height:1.45;margin-top:10px}
+.err{color:var(--bad);font-size:.9rem;margin-top:8px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1><b>X</b> Bebidas · Balcão</h1>
+    <button class="sair" id="sair" type="button" hidden>Sair</button>
+  </header>
+
+  <!-- aplicativo ainda não ligado -->
+  <section id="desligado" hidden>
+    <h2>Aplicativo ainda não ligado</h2>
+    <p class="msg">Falta ligar a planilha da loja. Peça a quem configurou para colocar o endereço do servidor neste aplicativo.</p>
+  </section>
+
+  <!-- senha -->
+  <section id="telaPin" hidden>
+    <h2>Senha do balcão</h2>
+    <label for="pin">Digite a senha da loja</label>
+    <input id="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="••••">
+    <div class="err" id="pinErr" hidden></div>
+    <button class="go" id="pinOk" type="button">Entrar</button>
+    <p class="msg">A senha fica guardada só neste celular.</p>
+  </section>
+
+  <!-- balcão -->
+  <div id="telaBalcao" hidden>
+    <section>
+      <h2>Conferir o cupom do cliente</h2>
+      <button class="go" id="lerQr" type="button">Ler o QR do cupom</button>
+      <div id="camera" hidden>
+        <video id="video" playsinline muted></video>
+        <button class="sec" id="fechaCam" type="button">Cancelar leitura</button>
+      </div>
+      <label for="codigo">ou digite o código do cupom</label>
+      <input id="codigo" class="cod" type="text" inputmode="text" autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="14" placeholder="XB-ABC123">
+      <button class="sec" id="conferir" type="button">Conferir código</button>
+      <div class="err" id="erro" hidden></div>
+    </section>
+
+    <div id="resultado" hidden></div>
+
+    <section id="calc" hidden>
+      <h2>Valor do desconto (5% sem cigarros)</h2>
+      <div class="linha">
+        <div><label for="total">Total da compra (R$)</label><input id="total" type="text" inputmode="decimal" placeholder="0,00"></div>
+        <div><label for="cig">Cigarros (R$)</label><input id="cig" type="text" inputmode="decimal" placeholder="0,00"></div>
+      </div>
+      <div class="res valido" id="calcRes" style="margin-top:12px" hidden><div class="st" id="calcVal"></div><div class="det" id="calcDet"></div></div>
+    </section>
+
+    <section>
+      <h2>Últimas conferências</h2>
+      <ul class="hist" id="hist"></ul>
+      <p class="msg" id="histVazio">Nada conferido ainda neste celular.</p>
+    </section>
+  </div>
+</main>
+
+<script src="jsQR.js"></script>
+<script>
+/* ======= Configuração (a mesma URL da tela do cliente) ======= */
+var EXEC_URL = '';           /* endereço do app da Web do Apps Script. Vazio = aplicativo desligado. */
+var NOME_APARELHO = 'Caixa'; /* aparece na planilha em "usado_por" */
+
+(function(){
+  var $ = function(s){return document.querySelector(s)};
+  var pct = 5, atual = null, stream = null, rodando = false;
+
+  function guarda(k,v){try{localStorage.setItem(k,v)}catch(x){}}
+  function le(k){try{return localStorage.getItem(k)}catch(x){return null}}
+  function apaga(k){try{localStorage.removeItem(k)}catch(x){}}
+
+  function chamar(qs,cb,ms){
+    var feito=false, fim=function(r){if(!feito){feito=true;cb(r)}};
+    var u=EXEC_URL+(EXEC_URL.indexOf('?')>=0?'&':'?')+qs;
+    setTimeout(function(){fim(null)},ms||8000);
+    function jsonp(){
+      try{
+        var n='xbc'+Date.now()+Math.floor(Math.random()*1000), sc=document.createElement('script');
+        window[n]=function(r){fim(r);try{delete window[n]}catch(x){}};
+        sc.src=u+'&callback='+n; sc.onerror=function(){fim(null)}; document.head.appendChild(sc);
+      }catch(x){fim(null)}
+    }
+    try{ fetch(u).then(function(r){return r.json()}).then(fim).catch(jsonp) }catch(x){ jsonp() }
+  }
+
+  function mostra(id){ ['desligado','telaPin','telaBalcao'].forEach(function(k){$('#'+k).hidden=(k!==id)}); $('#sair').hidden=(id!=='telaBalcao') }
+  function erro(m){var e=$('#erro');e.hidden=!m;e.textContent=m||''}
+
+  /* ---- código a partir de texto, link ou QR ---- */
+  function extraiCodigo(t){
+    t=String(t||'').toUpperCase();
+    var m=/XB[-_ ]?([A-Z0-9]{6})/.exec(t);
+    if(m) return m[1];
+    var s=t.replace(/[^A-Z0-9]/g,'');
+    return s.length===6 ? s : '';
+  }
+
+  /* ---- senha ---- */
+  function entrarComPin(pin,cb){
+    chamar('acao=validar&codigo=XXXXXX&pin='+encodeURIComponent(pin),function(r){
+      if(!r) return cb('sem_resposta');
+      if(r.ok===false && r.erro==='pin') return cb('pin');
+      cb(r.ok ? 'ok' : 'sem_resposta');
+    });
+  }
+  $('#pinOk').onclick=function(){
+    var pin=$('#pin').value.trim(), e=$('#pinErr');
+    e.hidden=true;
+    if(pin.length<4){e.hidden=false;e.textContent='A senha tem de 4 a 12 caracteres.';return}
+    $('#pinOk').disabled=true; $('#pinOk').textContent='Conferindo…';
+    entrarComPin(pin,function(r){
+      $('#pinOk').disabled=false; $('#pinOk').textContent='Entrar';
+      if(r==='ok'){ guarda('xb_pin',pin); $('#pin').value=''; iniciaBalcao() }
+      else { e.hidden=false; e.textContent = r==='pin' ? 'Senha incorreta ou bloqueada por alguns minutos.' : 'Sem conexão com a planilha. Tente de novo.' }
+    });
+  };
+  $('#sair').onclick=function(){ apaga('xb_pin'); paraCamera(); $('#resultado').hidden=true; $('#calc').hidden=true; mostra('telaPin') };
+
+  /* ---- balcão ---- */
+  function iniciaBalcao(){
+    mostra('telaBalcao'); desenhaHist();
+    var h=extraiCodigo(location.hash);
+    if(h){ $('#codigo').value='XB-'+h; confere(h); try{history.replaceState(null,'',location.pathname)}catch(x){} }
+  }
+  function confere(cod){
+    erro(''); cod=extraiCodigo(cod);
+    if(!cod){ erro('Digite o código do cupom: XB- e mais 6 letras ou números.'); return }
+    $('#resultado').hidden=true; $('#calc').hidden=true;
+    var btn=$('#conferir'); btn.disabled=true; btn.textContent='Conferindo…';
+    chamar('acao=validar&codigo='+encodeURIComponent('XB-'+cod)+'&pin='+encodeURIComponent(le('xb_pin')||''),function(r){
+      btn.disabled=false; btn.textContent='Conferir código';
+      if(!r){ erro('Sem conexão com a planilha. Confira a internet e tente de novo.'); return }
+      if(r.ok===false && r.erro==='pin'){ apaga('xb_pin'); mostra('telaPin'); return }
+      atual={codigo:cod,r:r}; renderResultado(r,cod,false);
+      registraHist(cod,r.estado,r.nome);
+    });
+  }
+  function renderResultado(r,cod,aposUsar){
+    var el=$('#resultado'); el.hidden=false;
+    var st=r.estado, h='', cls=st;
+    pct = r.pct || pct;
+    if(st==='valido'){
+      h='<div class="st">CUPOM VÁLIDO</div><div class="nome">'+esc(r.nome)+'</div>'+
+        '<div class="det">'+pct+'% em toda a compra, exceto cigarros<br>válido até '+esc(r.valido_ate_dia)+' · celular final '+esc(r.tel_final)+'</div>'+
+        '<button class="go" id="usar" type="button">Usar agora (marcar como usado)</button>';
+    } else if(st==='usado_agora'){
+      h='<div class="st">DESCONTO LIBERADO</div><div class="nome">'+esc(r.nome)+'</div>'+
+        '<div class="reg">Aplique <b>'+pct+'%</b> sobre o total <b>sem cigarros</b>.<br>Cupom marcado como usado.</div>'+
+        '<button class="sec" id="proximo" type="button">Próximo cliente</button>';
+    } else if(st==='usado'){
+      h='<div class="st">JÁ USADO</div><div class="nome">'+esc(r.nome)+'</div><div class="det">Usado em '+esc(fmtData(r.usado_em))+'</div>'+
+        '<button class="sec" id="proximo" type="button">Próximo cliente</button>';
+    } else if(st==='vencido'){
+      h='<div class="st">VENCIDO</div><div class="nome">'+esc(r.nome)+'</div><div class="det">Venceu em '+esc(r.valido_ate_dia)+'</div>'+
+        '<button class="sec" id="proximo" type="button">Próximo cliente</button>';
+    } else {
+      h='<div class="st">NÃO ENCONTRADO</div><div class="det">Esse código não existe. Confira as letras e tente de novo.</div>'+
+        '<button class="sec" id="proximo" type="button">Tentar outro</button>';
+    }
+    el.className='res '+cls; el.innerHTML=h;
+    var u=$('#usar'); if(u) u.onclick=usarAgora;
+    var p=$('#proximo'); if(p) p.onclick=proximo;
+    $('#calc').hidden=!(st==='valido'||st==='usado_agora');
+    recalc();
+    try{ el.scrollIntoView({behavior:'smooth',block:'center'}) }catch(x){}
+  }
+  function usarAgora(){
+    if(!atual) return;
+    var b=$('#usar'); b.disabled=true; b.textContent='Marcando…';
+    chamar('acao=usar&codigo='+encodeURIComponent('XB-'+atual.codigo)+'&pin='+encodeURIComponent(le('xb_pin')||'')+'&por='+encodeURIComponent(NOME_APARELHO),function(r){
+      if(!r){ b.disabled=false; b.textContent='Usar agora (marcar como usado)'; erro('Sem conexão. Não foi marcado como usado; tente de novo.'); return }
+      if(r.ok===false && r.erro==='pin'){ apaga('xb_pin'); mostra('telaPin'); return }
+      if(r.estado==='usado_agora'){ registraHist(atual.codigo,'usado_agora',r.nome) }
+      renderResultado(r,atual.codigo,true);
+    });
+  }
+  function proximo(){
+    atual=null; $('#resultado').hidden=true; $('#calc').hidden=true; $('#codigo').value=''; erro('');
+    $('#total').value=''; $('#cig').value='';
+    try{ window.scrollTo({top:0,behavior:'smooth'}) }catch(x){}
+  }
+  $('#conferir').onclick=function(){confere($('#codigo').value)};
+  $('#codigo').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); confere($('#codigo').value) } });
+
+  /* ---- calculadora do desconto ---- */
+  function num(v){ v=String(v||'').replace(/\./g,'').replace(',','.'); var n=parseFloat(v); return isNaN(n)?0:n }
+  function brl(n){ return 'R$ '+n.toFixed(2).replace('.',',') }
+  function recalc(){
+    var t=num($('#total').value), c=num($('#cig').value), res=$('#calcRes');
+    if(t<=0){ res.hidden=true; return }
+    var base=Math.max(t-c,0), d=Math.round(base*pct)/100;
+    res.hidden=false; $('#calcVal').textContent='Desconto: '+brl(d);
+    $('#calcDet').textContent=pct+'% de '+brl(base)+' (total '+brl(t)+(c>0?' menos cigarros '+brl(c):'')+')  ·  a pagar: '+brl(t-d);
+  }
+  $('#total').addEventListener('input',recalc); $('#cig').addEventListener('input',recalc);
+
+  /* ---- histórico local ---- */
+  var ROT={valido:'válido',usado_agora:'liberado',usado:'já usado',vencido:'vencido',inexistente:'não existe'};
+  function hist(){ try{return JSON.parse(le('xb_hist')||'[]')}catch(x){return []} }
+  function registraHist(cod,estado,nome){
+    var h=hist(); h.unshift({c:cod,e:estado,n:nome||'',t:Date.now()}); h=h.slice(0,10); guarda('xb_hist',JSON.stringify(h)); desenhaHist();
+  }
+  function desenhaHist(){
+    var h=hist(), ul=$('#hist'); ul.innerHTML='';
+    $('#histVazio').hidden=h.length>0;
+    h.forEach(function(i){
+      var d=new Date(i.t), hh=('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+      var li=document.createElement('li');
+      li.innerHTML='<span>XB-'+esc(i.c)+(i.n?' · '+esc(i.n):'')+'</span><span class="e-'+esc(i.e)+'">'+esc(ROT[i.e]||i.e)+' · '+hh+'</span>';
+      ul.appendChild(li);
+    });
+  }
+
+  /* ---- câmera e leitura do QR ---- */
+  var detector = null;
+  try{ if('BarcodeDetector' in window) detector = new BarcodeDetector({formats:['qr_code']}) }catch(x){ detector=null }
+  function paraCamera(){
+    rodando=false;
+    if(stream){ stream.getTracks().forEach(function(t){t.stop()}); stream=null }
+    $('#camera').hidden=true; $('#video').srcObject=null;
+  }
+  function decodificaCanvas(cv){
+    var ctx=cv.getContext('2d'), im=ctx.getImageData(0,0,cv.width,cv.height);
+    var r=window.jsQR && jsQR(im.data,im.width,im.height,{inversionAttempts:'dontInvert'});
+    return r ? r.data : '';
+  }
+  $('#lerQr').onclick=function(){
+    erro('');
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ erro('Este navegador não deixa usar a câmera. Digite o código do cupom.'); return }
+    navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false}).then(function(s){
+      stream=s; var v=$('#video'); v.srcObject=s; v.setAttribute('playsinline','true');
+      $('#camera').hidden=false; rodando=true;
+      v.play().then(loop,loop);
+    }).catch(function(){ erro('Não foi possível abrir a câmera. Permita o uso da câmera ou digite o código do cupom.') });
+  };
+  $('#fechaCam').onclick=paraCamera;
+  var cv=document.createElement('canvas');
+  function loop(){
+    if(!rodando) return;
+    var v=$('#video');
+    if(v.readyState>=2 && v.videoWidth){
+      var texto='';
+      var fim=function(){
+        var c=extraiCodigo(texto);
+        if(c){ paraCamera(); $('#codigo').value='XB-'+c; confere(c); return }
+        setTimeout(loop,120);
+      };
+      if(detector){
+        detector.detect(v).then(function(rs){ texto = rs && rs[0] ? rs[0].rawValue : ''; fim() }).catch(function(){ detector=null; fim() });
+      } else {
+        var w=Math.min(v.videoWidth,640), h=Math.round(w*v.videoHeight/v.videoWidth);
+        cv.width=w; cv.height=h; cv.getContext('2d').drawImage(v,0,0,w,h);
+        texto=decodificaCanvas(cv); fim();
+      }
+    } else setTimeout(loop,120);
+  }
+
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function fmtData(iso){
+    var d=new Date(iso); if(isNaN(d.getTime())) return '—';
+    var p=function(n){return ('0'+n).slice(-2)};
+    return p(d.getDate())+'/'+p(d.getMonth()+1)+' às '+p(d.getHours())+':'+p(d.getMinutes());
+  }
+
+  /* aplicativo já aberto e o link do QR chega depois (#XB-...): confere sozinho */
+  window.addEventListener('hashchange',function(){
+    var h=extraiCodigo(location.hash);
+    if(h && le('xb_pin') && !$('#telaBalcao').hidden){ $('#codigo').value='XB-'+h; confere(h); try{history.replaceState(null,'',location.pathname)}catch(x){} }
+  });
+
+  /* ---- ganchos de teste e início ---- */
+  window.__xb = { decodificaCanvas: decodificaCanvas, extraiCodigo: extraiCodigo };
+  if('serviceWorker' in navigator){ try{ navigator.serviceWorker.register('sw.js') }catch(x){} }
+  if(!EXEC_URL){ mostra('desligado') }
+  else if(!le('xb_pin')){ mostra('telaPin') }
+  else { iniciaBalcao() }
+})();
+</script>
+</body>
+</html>

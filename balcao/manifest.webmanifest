@@ -1,0 +1,17 @@
+{
+  "name": "Balcão X Bebidas",
+  "short_name": "Balcão X",
+  "description": "Confere e dá baixa nos cupons de 5% dos clientes da X Bebidas.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0b0c",
+  "theme_color": "#0a0b0c",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

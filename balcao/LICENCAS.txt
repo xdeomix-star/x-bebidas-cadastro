@@ -1,0 +1,4 @@
+Bibliotecas de terceiros usadas por esta página:
+- jsQR 1.4.0 (cozmo/jsQR), licença Apache-2.0, leitura de QR por câmera: arquivo jsQR.js
+- qrcode-generator 1.4.4 (Kazuhiko Arase), licença MIT: embutida na tela do cliente (index.html da raiz)
+WhatsApp é marca de seus titulares.
