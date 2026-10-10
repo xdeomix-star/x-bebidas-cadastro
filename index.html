@@ -203,6 +203,10 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
 
 .zap{display:block;text-align:center;text-decoration:none;line-height:56px;margin-top:14px;background:#25D366;color:#06210f;box-shadow:0 8px 20px -10px rgba(37,211,102,.5)}
 .zap.pulse{animation:none}
+.convite{color:var(--ink);font-size:.92rem;text-align:center;margin-top:16px}
+.convite b{color:var(--gold2)}
+.avisoGrupo{margin-top:6px;padding:10px 12px;border-radius:12px;background:rgba(37,211,102,.10);border:1px solid rgba(37,211,102,.45);color:var(--ink);font-size:.9rem;line-height:1.35}
+.avisoGrupo b{color:#5be08d}
 </style>
 
 <div class="wrap">
@@ -247,6 +251,7 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
           <div><label for="tel">Seu WhatsApp</label><input id="tel" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="(62) 9XXXX-XXXX" maxlength="16"><div class="err" id="tel-e" hidden></div></div>
           
           
+          <div class="avisoGrupo" id="avisoGrupo" hidden><b>Grupo do WhatsApp:</b> promoções e ações exclusivas para quem participa.</div>
           <label class="chk" for="ok1"><input id="ok1" type="checkbox"><span>Tenho 18 anos ou mais e autorizo o uso dos meus dados no cadastro.<small>Você pode pedir para apagar quando quiser.</small></span></label>
           <div class="err" id="ok1-e" hidden></div>
           <label class="chk" for="ok2"><input id="ok2" type="checkbox"><span>Quero ofertas por WhatsApp.<small>Opcional. Responda SAIR para parar.</small></span></label>
@@ -277,6 +282,7 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
           <div class="info"><span id="tLim"></span><span id="tVal"></span><span>Diga o seu <b>celular</b> no caixa ou no drive-thru</span></div>
         </div>
         <p class="print">Tire um print deste cupom para guardar.</p>
+        <p class="convite" id="conviteGrupo" hidden><b>Promoções e ações exclusivas</b> chegam primeiro no nosso grupo do WhatsApp.</p>
         <a id="grupoLink" class="go zap" target="_blank" rel="noopener" href="#" hidden>Entrar no grupo de ofertas</a>
         <a id="confirmaLink" class="go confirma" target="_blank" rel="noopener" href="#" hidden>Enviar meu cadastro</a>
         <p class="nota" id="confirmaNota"></p>
@@ -398,10 +404,11 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
   h1Inicial();
   (function(){
     if(!GRUPO_URL)return;
+    $('#avisoGrupo').hidden=false;
     var sp=document.querySelector('label[for=ok2] span');
     if(GRUPO_TIPO==='canal') sp.innerHTML='Quero seguir o canal de ofertas no WhatsApp.<small>Opcional. Você deixa de seguir quando quiser.</small>';
-    else sp.innerHTML='Quero entrar no grupo de ofertas do WhatsApp.<small>Opcional. Seu número fica visível aos outros participantes. Você sai quando quiser.</small>';
-    $('#grupoLink').textContent = GRUPO_TIPO==='canal' ? 'Seguir o canal de ofertas' : 'Entrar no grupo de ofertas';
+    else sp.innerHTML='Quero entrar no grupo de <b>promoções e ações exclusivas</b> do WhatsApp.<small>Opcional. Seu número fica visível aos outros participantes. Você sai quando quiser.</small>';
+    $('#grupoLink').textContent = GRUPO_TIPO==='canal' ? 'Seguir o canal de promoções' : 'Entrar no grupo de promoções';
   })();
   (function(){var b=$('#beb'),ex=['Ex.: Heineken long neck','Ex.: Coca-Cola 2 L','Ex.: Cerveja Amstel'],i=0;setInterval(function(){if(b.value||document.activeElement===b)return;i=(i+1)%ex.length;b.placeholder=ex[i]},2600)})();
 
@@ -448,7 +455,7 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
           '&ok1=1&ok2='+(ok2?'1':'0');
     var gl=$('#grupoLink'); gl.hidden=true;
     var vaiGrupo = !!(ok2 && GRUPO_URL);
-    if(vaiGrupo){ gl.href=GRUPO_URL; gl.hidden=false }
+    if(GRUPO_URL){ gl.href=GRUPO_URL; gl.hidden=false; $('#conviteGrupo').hidden=false }else{ $('#conviteGrupo').hidden=true }
     var link=$('#confirmaLink'), nota=$('#confirmaNota');
     link.hidden=true; link.href='#'; nota.textContent='';
     if(EXEC_URL){
