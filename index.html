@@ -454,8 +454,16 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
 
   /* ---- data de nascimento e trava de cadastro único ---- */
   var balcao = (location.hash||'').replace('#','').toLowerCase()==='balcao';
+  if((location.hash||'').replace('#','').toLowerCase()==='limpar'){
+    try{localStorage.removeItem('xb_cadastro')}catch(x){}
+    try{history.replaceState(null,'',location.pathname+location.search)}catch(x){}
+  }
+  if(balcao){ ['nome','nasc','tel','beb'].forEach(function(id){var el=document.getElementById(id);if(el)el.setAttribute('autocomplete','off')}) }
+  window.addEventListener('pageshow',function(ev){ if(ev.persisted){ var f=document.getElementById('f'); if(f)f.reset() } });
   $('#nasc').addEventListener('input',function(e){
-    var v=e.target.value.replace(/\D/g,'').slice(0,8), o=v.slice(0,2);
+    var raw=e.target.value, iso=/^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+    if(iso) raw=iso[3]+iso[2]+iso[1];
+    var v=raw.replace(/\D/g,'').slice(0,8), o=v.slice(0,2);
     if(v.length>2)o+='/'+v.slice(2,4); if(v.length>4)o+='/'+v.slice(4);
     e.target.value=o;
   });
@@ -533,7 +541,7 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
     $('#tWhat').textContent='em toda a sua primeira compra';
     $('#tLim').textContent='Válido até '+fmtDia(vd)+' · exceto cigarros';
     $('#tVal').textContent='Uso único, após o cadastro';
-    guardaCadastro(primeiroNome);
+    if(EXEC_URL) guardaCadastro(primeiroNome);
     $('#f').reset();
     passo('s3');
     };
