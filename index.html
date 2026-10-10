@@ -455,7 +455,9 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
           '&ok1=1&ok2='+(ok2?'1':'0');
     var gl=$('#grupoLink'); gl.hidden=true;
     var vaiGrupo = !!(ok2 && GRUPO_URL);
-    if(GRUPO_URL){ gl.href=GRUPO_URL; gl.hidden=false; $('#conviteGrupo').hidden=false }else{ $('#conviteGrupo').hidden=true }
+    if(GRUPO_URL){ gl.href=GRUPO_URL; gl.hidden=false; var cv=$('#conviteGrupo'); cv.hidden=false;
+      cv.innerHTML = ok2 ? '<b>Falta só um toque:</b> entre no grupo de promoções e ações exclusivas do WhatsApp.' : '<b>Promoções e ações exclusivas</b> chegam primeiro no nosso grupo do WhatsApp.';
+      gl.classList.toggle('pulse',!!ok2) }else{ $('#conviteGrupo').hidden=true }
     var link=$('#confirmaLink'), nota=$('#confirmaNota');
     link.hidden=true; link.href='#'; nota.textContent='';
     if(EXEC_URL){
@@ -476,15 +478,6 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
     $('#tVal').textContent='Uso único, após o cadastro';
     $('#f').reset();
     passo('s3');
-    /* quem marcou "ofertas" vai DIRETO para o grupo, na mesma tela; o envio sai antes (keepalive) */
-    if(vaiGrupo){
-      setTimeout(function(){
-        var ok=false;
-        try{ (window.top||window).location.href=GRUPO_URL; ok=true }catch(x){}
-        if(!ok){ try{ var w=window.open(GRUPO_URL,'_blank'); ok=!!w }catch(x){} }
-        /* se nada abrir, o botão verde do cupom continua visível */
-      },250);
-    }
   });
 })();
 </script>
