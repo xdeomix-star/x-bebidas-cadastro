@@ -251,6 +251,7 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
         <div class="resumo" id="oferta"></div>
         <form id="f" novalidate>
           <div><label for="nome">Seu nome</label><input id="nome" type="text" autocomplete="given-name" autocapitalize="words" placeholder="Como podemos te chamar?" maxlength="200"><div class="err" id="nome-e" hidden></div></div>
+          <div><label for="nasc">Data de nascimento</label><input id="nasc" type="text" inputmode="numeric" autocomplete="bday" placeholder="DD/MM/AAAA" maxlength="10"><div class="err" id="nasc-e" hidden></div></div>
           <div><label for="tel">Seu WhatsApp</label><input id="tel" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="(62) 9XXXX-XXXX" maxlength="16"><div class="err" id="tel-e" hidden></div></div>
           
           
@@ -290,6 +291,14 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
         <a id="confirmaLink" class="go confirma" target="_blank" rel="noopener" href="#" hidden>Enviar meu cadastro</a>
         <p class="nota" id="confirmaNota"></p>
         <button class="back" id="outro" type="button" hidden>Cadastrar outra pessoa</button>
+      </div>
+
+      <!-- já cadastrado -->
+      <div id="sj" hidden>
+        <h2 class="q" id="sjt">Você já tem cadastro</h2>
+        <p class="sub" id="sjp"></p>
+        <a id="sjGrupo" class="go zap" target="_blank" rel="noopener" href="#" hidden>Entrar no grupo do WhatsApp</a>
+        <button class="back" id="sjOutra" type="button">Cadastrar outra pessoa neste aparelho</button>
       </div>
 
       <!-- menor -->
@@ -386,9 +395,9 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
   });
 
   function passo(n){
-    ['s1','s2','s3','sm'].forEach(function(k){$('#'+k).hidden=(k!==n)});
-    var m={s1:[33,'Falta pouco · 2 passos'],s2:[66,'Último passo'],s3:[100,'Pronto'],sm:[33,'']};
-    $('#prog').style.width=m[n][0]+'%'; document.body.classList.toggle('foco', n==='s2'||n==='s3'); $('#stepTxt').textContent=m[n][1];
+    ['s1','s2','s3','sm','sj'].forEach(function(k){$('#'+k).hidden=(k!==n)});
+    var m={s1:[33,'Falta pouco · 2 passos'],s2:[66,'Último passo'],s3:[100,'Pronto'],sm:[33,''],sj:[100,'Cadastro encontrado']};
+    $('#prog').style.width=m[n][0]+'%'; document.body.classList.toggle('foco', n==='s2'||n==='s3'||n==='sj'); $('#stepTxt').textContent=m[n][1];
   }
   function irDados(){
     var v = $('#beb').value.trim().replace(/\s+/g,' ');
@@ -442,20 +451,66 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
     var el=e.target, pos=el.selectionStart, v=capNome(el.value);
     if(v!==el.value){ el.value=v; try{el.setSelectionRange(pos,pos)}catch(x){} }
   });
+
+  /* ---- data de nascimento e trava de cadastro único ---- */
+  var balcao = (location.hash||'').replace('#','').toLowerCase()==='balcao';
+  $('#nasc').addEventListener('input',function(e){
+    var v=e.target.value.replace(/\D/g,'').slice(0,8), o=v.slice(0,2);
+    if(v.length>2)o+='/'+v.slice(2,4); if(v.length>4)o+='/'+v.slice(4);
+    e.target.value=o;
+  });
+  function lerNasc(s){
+    var m=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(s); if(!m)return null;
+    var d=+m[1],mo=+m[2],y=+m[3],dt=new Date(y,mo-1,d),h=new Date();
+    if(dt.getFullYear()!==y||dt.getMonth()!==mo-1||dt.getDate()!==d||dt>h||y<1900)return null;
+    var idade=h.getFullYear()-y-((h.getMonth()<mo-1||(h.getMonth()===mo-1&&h.getDate()<d))?1:0);
+    return {iso:y+'-'+('0'+mo).slice(-2)+'-'+('0'+d).slice(-2),idade:idade};
+  }
+  function guardaCadastro(nomeCurto){try{localStorage.setItem('xb_cadastro',JSON.stringify({n:nomeCurto,t:Date.now()}))}catch(x){}}
+  function lerCadastro(){try{return JSON.parse(localStorage.getItem('xb_cadastro')||'null')}catch(x){return null}}
+  function mostraJa(nomeCurto,tipo,usado){
+    $('#sjt').textContent=(nomeCurto?nomeCurto+', v':'V')+'ocê já tem cadastro';
+    var txt;
+    if(tipo==='nome_nasc') txt='Encontramos um cadastro com esse nome e data de nascimento. Diga no caixa o celular que você usou da primeira vez.';
+    else if(tipo==='aparelho') txt='Este aparelho já fez um cadastro. Diga o seu celular no caixa ou no drive-thru para usar o seu desconto.';
+    else if(usado) txt='O seu desconto de 1ª compra já foi usado. Fique de olho nas promoções e ações exclusivas do nosso grupo.';
+    else txt='O seu desconto continua valendo. Diga o seu celular no caixa ou no drive-thru.';
+    $('#sjp').textContent=txt;
+    var g=$('#sjGrupo'); if(g){ if(GRUPO_URL){g.href=GRUPO_URL;g.hidden=false}else{g.hidden=true} }
+    $('#f').reset(); passo('sj');
+  }
+  $('#sjOutra').onclick=function(){try{localStorage.removeItem('xb_cadastro')}catch(x){} passo('s1')};
+  function consulta(tel,nome,nasc,cb){
+    var feito=false, fim=function(r){if(!feito){feito=true;cb(r)}};
+    var u=EXEC_URL+(EXEC_URL.indexOf('?')>=0?'&':'?')+'acao=consulta&telefone='+encodeURIComponent(tel)+'&nome='+encodeURIComponent(nome)+'&nasc='+encodeURIComponent(nasc);
+    setTimeout(function(){fim(null)},4000);
+    function jsonp(){
+      try{
+        var cbn='xbcb'+Date.now(), sc=document.createElement('script');
+        window[cbn]=function(r){fim(r);try{delete window[cbn]}catch(x){}};
+        sc.src=u+'&callback='+cbn; sc.onerror=function(){fim(null)}; document.head.appendChild(sc);
+      }catch(x){fim(null)}
+    }
+    try{ fetch(u).then(function(r){return r.json()}).then(fim).catch(jsonp) }catch(x){ jsonp() }
+  }
   $('#f').addEventListener('submit',function(ev){
     ev.preventDefault();
     var nome=$('#nome').value.trim().replace(/\s+/g,' '), tel=$('#tel').value.replace(/\D/g,''),
-        ok1=$('#ok1').checked, ok2=$('#ok2').checked;
-    ['nome','tel','ok1'].forEach(function(k){err(k,'')});
+        ok1=$('#ok1').checked, ok2=$('#ok2').checked, nasc=lerNasc($('#nasc').value.trim());
+    ['nome','nasc','tel','ok1'].forEach(function(k){err(k,'')});
     var primeiro=null, bad=function(id,m){err(id,m);if(!primeiro)primeiro=id};
     if(nome.length<2)bad('nome','Escreva o seu nome.');
+    if(!nasc||nasc.idade>110)bad('nasc','Informe a data, por exemplo 25/03/1990.');
     if(tel.length!==11||tel[2]!=='9')bad('tel','Informe DDD e celular com 9 dígitos.');
     if(!ok1)bad('ok1','Marque para continuar.');
     if(primeiro){var el=$('#'+primeiro);if(el)el.focus();return}
+    if(nasc.idade<18){ $('#f').reset(); passo('sm'); return }
+    var btnEnv=$('#f button[type=submit]'), txtEnv=btnEnv.textContent;
+    var seguir=function(){
 
     var q='nome='+encodeURIComponent(nome)+'&telefone='+encodeURIComponent(tel)+
           '&bebida='+encodeURIComponent(bebidaEnvio||bebida)+'&origem='+encodeURIComponent(origem)+
-          '&ok1=1&ok2='+(ok2?'1':'0');
+          '&nasc='+encodeURIComponent(nasc.iso)+'&ok1=1&ok2='+(ok2?'1':'0');
     var gl=$('#grupoLink'); gl.hidden=true;
     var vaiGrupo = !!(ok2 && GRUPO_URL);
     if(GRUPO_URL){ gl.href=GRUPO_URL; gl.hidden=false; var cv=$('#conviteGrupo'); cv.hidden=false;
@@ -478,9 +533,20 @@ body.foco .sticker-card,body.foco .hl .sticker{display:none!important}
     $('#tWhat').textContent='em toda a sua primeira compra';
     $('#tLim').textContent='Válido até '+fmtDia(vd)+' · exceto cigarros';
     $('#tVal').textContent='Uso único, após o cadastro';
+    guardaCadastro(primeiroNome);
     $('#f').reset();
     passo('s3');
+    };
+    if(EXEC_URL && !balcao){
+      btnEnv.disabled=true; btnEnv.textContent='Conferindo seu cadastro…';
+      consulta(tel,nome,nasc.iso,function(r){
+        btnEnv.disabled=false; btnEnv.textContent=txtEnv;
+        if(r && r.existe) mostraJa(nome.split(' ')[0], r.motivo, r.usado); else seguir();
+      });
+    } else seguir();
   });
+  /* ao abrir: aparelho que já fez cadastro vê "já cadastrado" (o tablet #balcao fica livre) */
+  (function(){ var c=lerCadastro(); if(c && !balcao) mostraJa(c.n,'aparelho',false) })();
 })();
 </script>
 
