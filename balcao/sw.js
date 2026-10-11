@@ -1,6 +1,6 @@
 /* Service worker do Balcão X: guarda a casca do aplicativo para abrir rápido.
    As chamadas ao servidor da planilha NUNCA são guardadas. */
-var CACHE = 'balcao-x-v2';
+var CACHE = 'balcao-x-v3';
 var ARQUIVOS = ['./', 'index.html', 'jsQR.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(ARQUIVOS) }).then(function () { return self.skipWaiting() }));

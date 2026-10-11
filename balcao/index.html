@@ -59,6 +59,7 @@ video{width:100%;border-radius:14px;background:#000;aspect-ratio:1;object-fit:co
 <main>
   <header>
     <h1><b>X</b> Bebidas · Balcão</h1>
+    <span id="quem" style="margin-left:auto;margin-right:10px;font-size:.9rem;color:var(--ok);font-weight:700" hidden></span>
     <button class="sair" id="sair" type="button" hidden>Sair</button>
   </header>
 
@@ -70,8 +71,10 @@ video{width:100%;border-radius:14px;background:#000;aspect-ratio:1;object-fit:co
 
   <!-- senha -->
   <section id="telaPin" hidden>
-    <h2>Senha do balcão</h2>
-    <label for="pin">Digite a senha da loja</label>
+    <h2>Entrar no balcão</h2>
+    <label for="nomeCaixa">Seu primeiro nome</label>
+    <input id="nomeCaixa" type="text" autocomplete="off" autocapitalize="words" maxlength="30" placeholder="ex.: Maria">
+    <label for="pin">Senha do balcão (a da loja)</label>
     <input id="pin" type="password" autocomplete="off" autocapitalize="none" maxlength="32" placeholder="senha do balcão">
     <div class="err" id="pinErr" hidden></div>
     <button class="go" id="pinOk" type="button">Entrar</button>
@@ -91,6 +94,12 @@ video{width:100%;border-radius:14px;background:#000;aspect-ratio:1;object-fit:co
       <input id="codigo" class="cod" type="text" inputmode="text" autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="14" placeholder="XB-ABC123">
       <button class="sec" id="conferir" type="button">Conferir código</button>
       <div class="err" id="erro" hidden></div>
+      <details id="perdeu" style="margin-top:14px">
+        <summary style="cursor:pointer;font-weight:700">Cliente perdeu o cupom? Buscar pelo celular</summary>
+        <label for="telBusca" style="margin-top:10px;display:block">Celular do cliente (com DDD)</label>
+        <input id="telBusca" type="tel" inputmode="tel" autocomplete="off" maxlength="16" placeholder="(62) 9XXXX-XXXX">
+        <button class="sec" id="buscar" type="button">Buscar cupom pelo celular</button>
+      </details>
     </section>
 
     <div id="resultado" hidden></div>
@@ -117,7 +126,6 @@ video{width:100%;border-radius:14px;background:#000;aspect-ratio:1;object-fit:co
 <script>
 /* ======= Configuração (a mesma URL da tela do cliente) ======= */
 var EXEC_URL = (window.XB_CONFIG && window.XB_CONFIG.EXEC_URL) || '';   /* vem de ../config.js (o mesmo da tela do cliente). Vazio = desligado. */
-var NOME_APARELHO = (window.XB_CONFIG && window.XB_CONFIG.NOME_APARELHO) || 'Caixa'; /* aparece na planilha em "usado_por" */
 
 (function(){
   var $ = function(s){return document.querySelector(s)};
@@ -156,25 +164,28 @@ var NOME_APARELHO = (window.XB_CONFIG && window.XB_CONFIG.NOME_APARELHO) || 'Cai
   }
 
   /* ---- senha ---- */
-  function entrarComPin(pin,cb){
-    chamar('acao=validar&codigo=XXXXXX&pin='+encodeURIComponent(pin),function(r){
+  function entrarComPin(pin,nome,cb){
+    chamar('acao=validar&codigo=XXXXXX&pin='+encodeURIComponent(pin)+'&quem='+encodeURIComponent(nome),function(r){
       if(!r) return cb('sem_resposta');
       if(r.ok===false && r.erro==='pin') return cb('pin');
-      cb(r.ok ? 'ok' : 'sem_resposta');
+      if(r.ok===false && r.erro==='nome') return cb('nome');
+      cb(r.ok ? {nome:r.caixa||nome} : 'sem_resposta');
     });
   }
+  function mostraQuem(){ var q=$('#quem'), n=le('xb_nome'); q.hidden=!n; q.textContent=n?('Caixa: '+n):'' }
   $('#pinOk').onclick=function(){
-    var pin=$('#pin').value.trim(), e=$('#pinErr');
+    var pin=$('#pin').value.trim(), nome=$('#nomeCaixa').value.trim().replace(/[<>]/g,''), e=$('#pinErr');
     e.hidden=true;
+    if(nome.length<2){e.hidden=false;e.textContent='Digite o seu primeiro nome.';return}
     if(pin.length<8){e.hidden=false;e.textContent='A senha tem de 8 a 32 caracteres.';return}
     $('#pinOk').disabled=true; $('#pinOk').textContent='Conferindo…';
-    entrarComPin(pin,function(r){
+    entrarComPin(pin,nome,function(r){
       $('#pinOk').disabled=false; $('#pinOk').textContent='Entrar';
-      if(r==='ok'){ guarda('xb_pin',pin); $('#pin').value=''; iniciaBalcao() }
-      else { e.hidden=false; e.textContent = r==='pin' ? 'Senha incorreta.' : 'Sem conexão com a planilha. Tente de novo.' }
+      if(r && r.nome){ guarda('xb_pin',pin); guarda('xb_nome',r.nome); $('#pin').value=''; $('#nomeCaixa').value=''; mostraQuem(); iniciaBalcao() }
+      else { e.hidden=false; e.textContent = r==='pin' ? 'Senha incorreta.' : r==='nome' ? 'Esse nome não está na lista de caixas. Peça ao dono para incluir você.' : 'Sem conexão com a planilha. Tente de novo.' }
     });
   };
-  $('#sair').onclick=function(){ apaga('xb_pin'); paraCamera(); $('#resultado').hidden=true; $('#calc').hidden=true; mostra('telaPin') };
+  $('#sair').onclick=function(){ apaga('xb_pin'); apaga('xb_nome'); mostraQuem(); paraCamera(); $('#resultado').hidden=true; $('#calc').hidden=true; mostra('telaPin') };
 
   /* ---- balcão ---- */
   function iniciaBalcao(){
@@ -187,10 +198,10 @@ var NOME_APARELHO = (window.XB_CONFIG && window.XB_CONFIG.NOME_APARELHO) || 'Cai
     if(!cod){ erro('Digite o código do cupom: XB- e mais 6 letras ou números.'); return }
     $('#resultado').hidden=true; $('#calc').hidden=true;
     var btn=$('#conferir'); btn.disabled=true; btn.textContent='Conferindo…';
-    chamar('acao=validar&codigo='+encodeURIComponent('XB-'+cod)+'&pin='+encodeURIComponent(le('xb_pin')||''),function(r){
+    chamar('acao=validar&codigo='+encodeURIComponent('XB-'+cod)+'&pin='+encodeURIComponent(le('xb_pin')||'')+'&quem='+encodeURIComponent(le('xb_nome')||''),function(r){
       btn.disabled=false; btn.textContent='Conferir código';
       if(!r){ erro('Sem conexão com a planilha. Confira a internet e tente de novo.'); return }
-      if(r.ok===false && r.erro==='pin'){ apaga('xb_pin'); mostra('telaPin'); return }
+      if(r.ok===false && (r.erro==='pin' || r.erro==='nome')){ apaga('xb_pin'); apaga('xb_nome'); mostraQuem(); mostra('telaPin'); return }
       atual={codigo:cod,r:r}; renderResultado(r,cod,false);
       registraHist(cod,r.estado,r.nome);
     });
@@ -205,10 +216,10 @@ var NOME_APARELHO = (window.XB_CONFIG && window.XB_CONFIG.NOME_APARELHO) || 'Cai
         '<button class="go" id="usar" type="button">Usar agora (marcar como usado)</button>';
     } else if(st==='usado_agora'){
       h='<div class="st">DESCONTO LIBERADO</div><div class="nome">'+esc(r.nome)+'</div>'+
-        '<div class="reg">Aplique <b>'+pct+'%</b> sobre o total <b>sem cigarros</b>.<br>Cupom marcado como usado.</div>'+
+        '<div class="reg">Aplique <b>'+pct+'%</b> sobre o total <b>sem cigarros</b>.<br>Cupom marcado como usado por <b>'+esc(r.caixa||le('xb_nome')||'')+'</b>.</div>'+
         '<button class="sec" id="proximo" type="button">Próximo cliente</button>';
     } else if(st==='usado'){
-      h='<div class="st">JÁ USADO</div><div class="nome">'+esc(r.nome)+'</div><div class="det">Usado em '+esc(fmtData(r.usado_em))+'</div>'+
+      h='<div class="st">JÁ USADO</div><div class="nome">'+esc(r.nome)+'</div><div class="det">Usado em '+esc(fmtData(r.usado_em))+(r.usado_por?' por <b>'+esc(r.usado_por)+'</b>':'')+'</div>'+
         '<button class="sec" id="proximo" type="button">Próximo cliente</button>';
     } else if(st==='vencido'){
       h='<div class="st">VENCIDO</div><div class="nome">'+esc(r.nome)+'</div><div class="det">Venceu em '+esc(r.valido_ate_dia)+'</div>'+
@@ -227,9 +238,9 @@ var NOME_APARELHO = (window.XB_CONFIG && window.XB_CONFIG.NOME_APARELHO) || 'Cai
   function usarAgora(){
     if(!atual) return;
     var b=$('#usar'); b.disabled=true; b.textContent='Marcando…';
-    chamar('acao=usar&codigo='+encodeURIComponent('XB-'+atual.codigo)+'&pin='+encodeURIComponent(le('xb_pin')||'')+'&por='+encodeURIComponent(NOME_APARELHO),function(r){
+    chamar('acao=usar&codigo='+encodeURIComponent('XB-'+atual.codigo)+'&pin='+encodeURIComponent(le('xb_pin')||'')+'&quem='+encodeURIComponent(le('xb_nome')||''),function(r){
       if(!r){ b.disabled=false; b.textContent='Usar agora (marcar como usado)'; erro('Sem conexão. Não foi marcado como usado; tente de novo.'); return }
-      if(r.ok===false && r.erro==='pin'){ apaga('xb_pin'); mostra('telaPin'); return }
+      if(r.ok===false && (r.erro==='pin' || r.erro==='nome')){ apaga('xb_pin'); apaga('xb_nome'); mostraQuem(); mostra('telaPin'); return }
       if(r.estado==='usado_agora'){ registraHist(atual.codigo,'usado_agora',r.nome) }
       renderResultado(r,atual.codigo,true);
     });
@@ -240,6 +251,22 @@ var NOME_APARELHO = (window.XB_CONFIG && window.XB_CONFIG.NOME_APARELHO) || 'Cai
     try{ window.scrollTo({top:0,behavior:'smooth'}) }catch(x){}
   }
   $('#conferir').onclick=function(){confere($('#codigo').value)};
+  /* cliente perdeu o cupom: o caixa (já identificado) busca pelo celular e recebe o código */
+  $('#buscar').onclick=function(){
+    erro(''); var tel=$('#telBusca').value.replace(/\D/g,'');
+    if(tel.length!==11){ erro('Digite o celular completo, com DDD e o 9.'); return }
+    $('#resultado').hidden=true; $('#calc').hidden=true;
+    var btn=$('#buscar'); btn.disabled=true; btn.textContent='Buscando…';
+    chamar('acao=buscar&telefone='+encodeURIComponent(tel)+'&pin='+encodeURIComponent(le('xb_pin')||'')+'&quem='+encodeURIComponent(le('xb_nome')||''),function(r){
+      btn.disabled=false; btn.textContent='Buscar cupom pelo celular';
+      if(!r){ erro('Sem conexão com a planilha. Confira a internet e tente de novo.'); return }
+      if(r.ok===false && (r.erro==='pin' || r.erro==='nome')){ apaga('xb_pin'); apaga('xb_nome'); mostraQuem(); mostra('telaPin'); return }
+      if(r.estado==='inexistente' || !r.codigo){ erro('Nenhum cadastro com esse celular. Confira os números ou peça para o cliente se cadastrar.'); return }
+      $('#codigo').value='XB-'+r.codigo; $('#telBusca').value=''; $('#perdeu').open=false;
+      atual={codigo:r.codigo,r:r}; renderResultado(r,r.codigo,false); registraHist(r.codigo,r.estado,r.nome);
+    });
+  };
+  $('#telBusca').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); $('#buscar').click() } });
   $('#codigo').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); confere($('#codigo').value) } });
 
   /* ---- calculadora do desconto ---- */
@@ -340,15 +367,15 @@ var NOME_APARELHO = (window.XB_CONFIG && window.XB_CONFIG.NOME_APARELHO) || 'Cai
   /* aplicativo já aberto e o link do QR chega depois (#XB-...): confere sozinho */
   window.addEventListener('hashchange',function(){
     var h=extraiCodigo(location.hash);
-    if(h && le('xb_pin') && !$('#telaBalcao').hidden){ $('#codigo').value='XB-'+h; confere(h); try{history.replaceState(null,'',location.pathname)}catch(x){} }
+    if(h && le('xb_pin') && le('xb_nome') && !$('#telaBalcao').hidden){ $('#codigo').value='XB-'+h; confere(h); try{history.replaceState(null,'',location.pathname)}catch(x){} }
   });
 
   /* ---- ganchos de teste e início ---- */
   window.__xb = { decodificaCanvas: decodificaCanvas, extraiCodigo: extraiCodigo };
   if('serviceWorker' in navigator){ try{ navigator.serviceWorker.register('sw.js') }catch(x){} }
   if(!EXEC_URL){ mostra('desligado') }
-  else if(!le('xb_pin')){ mostra('telaPin') }
-  else { iniciaBalcao() }
+  else if(!le('xb_pin') || !le('xb_nome')){ mostra('telaPin') }
+  else { mostraQuem(); iniciaBalcao() }
 })();
 </script>
 </body>

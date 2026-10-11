@@ -2238,10 +2238,10 @@ var qrcode = function() {
           /* servidor sem resposta: envia do jeito antigo; o cupom fica sem QR e vale pelo celular */
           var url=EXEC_URL+(EXEC_URL.indexOf('?')>=0?'&':'?')+q;
           var volta=function(){link.href=url;link.hidden=false;nota.textContent='Toque para concluir o cadastro.'};
-          nota.textContent='Cadastro enviado. Diga o seu celular no caixa.';
+          nota.textContent='Cadastro enviado. Se o QR não aparecer, diga o seu celular no caixa: ele encontra o seu cupom.';
           try{ fetch(url,{mode:'no-cors',keepalive:true}).then(function(){guardaCadastro(primeiroNome)}).catch(volta) }catch(x){volta()}
         }
-      },7000);
+      },15000);
     } else {
       mostraCodigo('TESTE1','',tel.slice(-4),true);
       nota.textContent='Modo de teste: o envio ainda não foi ligado à planilha da loja. O código acima é só um exemplo.';
