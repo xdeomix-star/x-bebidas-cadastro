@@ -112,11 +112,12 @@ video{width:100%;border-radius:14px;background:#000;aspect-ratio:1;object-fit:co
   </div>
 </main>
 
+<script src="../config.js"></script>
 <script src="jsQR.js"></script>
 <script>
 /* ======= Configuração (a mesma URL da tela do cliente) ======= */
-var EXEC_URL = '';           /* endereço do app da Web do Apps Script. Vazio = aplicativo desligado. */
-var NOME_APARELHO = 'Caixa'; /* aparece na planilha em "usado_por" */
+var EXEC_URL = (window.XB_CONFIG && window.XB_CONFIG.EXEC_URL) || '';   /* vem de ../config.js (o mesmo da tela do cliente). Vazio = desligado. */
+var NOME_APARELHO = (window.XB_CONFIG && window.XB_CONFIG.NOME_APARELHO) || 'Caixa'; /* aparece na planilha em "usado_por" */
 
 (function(){
   var $ = function(s){return document.querySelector(s)};

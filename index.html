@@ -1963,13 +1963,16 @@ var qrcode = function() {
 }));
 
 </script>
+<script src="config.js"></script>
 <script>
 (function(){
-  var EXEC_URL = '';                       /* URL do app da Web (Apps Script). Vazio = modo de teste. */
-  var GRUPO_URL = 'https://chat.whatsapp.com/EyL7zeLceuK9L5CiU1uvio';                      /* link de convite do grupo ou canal do WhatsApp. Vazio = só registra o aceite de ofertas. */
-  var BALCAO_URL = 'https://xdeomix-star.github.io/x-bebidas-cadastro/balcao/';   /* o QR do cupom abre o aplicativo do balcão */
-  var GRUPO_TIPO = 'grupo';                /* 'grupo' ou 'canal' (muda só o texto da caixa) */
-  var PCT = 5, DIAS = 7, LIMITE = 6;       /* iguais ao script da planilha */
+  /* Tudo vem de config.js (arquivo único, o mesmo do balcão). Sem config.js: modo de teste. */
+  var C = window.XB_CONFIG || {};
+  var EXEC_URL = C.EXEC_URL || '';          /* URL do app da Web (Apps Script). Vazio = modo de teste. */
+  var GRUPO_URL = C.GRUPO_URL || '';        /* link de convite do grupo ou canal do WhatsApp. Vazio = só registra o aceite de ofertas. */
+  var BALCAO_URL = C.BALCAO_URL || 'https://xdeomix-star.github.io/x-bebidas-cadastro/balcao/';   /* o QR do cupom abre o aplicativo do balcão */
+  var GRUPO_TIPO = C.GRUPO_TIPO || 'grupo';  /* 'grupo' ou 'canal' (muda só o texto da caixa) */
+  var PCT = C.PCT || 5, DIAS = C.DIAS || 7, LIMITE = C.LIMITE || 6;   /* iguais ao script da planilha */
   /* Preços de referência da lista do Adeggo (10/10/2026). Sem preço: mostra só a %. */
   var CARDAPIO = [
     {n:'Cerveja Amstel', c:'Amstel', u:'lata 350 ml', p:4.25},
