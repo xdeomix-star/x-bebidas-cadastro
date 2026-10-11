@@ -74,11 +74,16 @@ video{width:100%;border-radius:14px;background:#000;aspect-ratio:1;object-fit:co
     <h2>Entrar no balcão</h2>
     <label for="nomeCaixa">Seu primeiro nome</label>
     <input id="nomeCaixa" type="text" autocomplete="off" autocapitalize="words" maxlength="30" placeholder="ex.: Maria">
-    <label for="pin">Senha do balcão (a da loja)</label>
-    <input id="pin" type="password" autocomplete="off" autocapitalize="none" maxlength="32" placeholder="senha do balcão">
+    <label for="pin">Sua senha (4 números)</label>
+    <input id="pin" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="4" placeholder="••••">
+    <div id="primeiro" hidden>
+      <p class="msg" style="color:var(--ok);font-weight:700;margin:10px 0 4px">Primeiro acesso: crie a sua senha de 4 números.</p>
+      <label for="pin2">Digite a mesma senha de novo</label>
+      <input id="pin2" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="4" placeholder="••••">
+    </div>
     <div class="err" id="pinErr" hidden></div>
     <button class="go" id="pinOk" type="button">Entrar</button>
-    <p class="msg">A senha fica guardada só neste celular.</p>
+    <p class="msg">Na primeira vez você cria a sua senha. Depois é só o nome e os 4 números, e o celular lembra.</p>
   </section>
 
   <!-- balcão -->
@@ -164,28 +169,44 @@ var EXEC_URL = (window.XB_CONFIG && window.XB_CONFIG.EXEC_URL) || '';   /* vem d
   }
 
   /* ---- senha ---- */
-  function entrarComPin(pin,nome,cb){
-    chamar('acao=validar&codigo=XXXXXX&pin='+encodeURIComponent(pin)+'&quem='+encodeURIComponent(nome),function(r){
+  var criando=false;
+  function modoCriar(on){ criando=on; $('#primeiro').hidden=!on; $('#pinOk').textContent=on?'Criar minha senha e entrar':'Entrar'; if(!on) $('#pin2').value='' }
+  function entrarComPin(pin,nome,criar,cb){
+    chamar('acao=validar&codigo=XXXXXX&pin='+encodeURIComponent(pin)+'&quem='+encodeURIComponent(nome)+(criar?'&criar=1':''),function(r){
       if(!r) return cb('sem_resposta');
-      if(r.ok===false && r.erro==='pin') return cb('pin');
-      if(r.ok===false && r.erro==='nome') return cb('nome');
+      if(r.ok===false && r.erro) return cb(r.erro);
       cb(r.ok ? {nome:r.caixa||nome} : 'sem_resposta');
     });
   }
+  /* o servidor derrubou o acesso (senha zerada, bloqueio, nome desligado): volta para a entrada */
+  function desloga(r){
+    if(r && r.ok===false && ['pin','nome','bloqueado','criar','pin_formato'].indexOf(r.erro)>=0){ apaga('xb_pin'); apaga('xb_nome'); mostraQuem(); mostra('telaPin'); return true }
+    return false;
+  }
+  $('#nomeCaixa').addEventListener('input',function(){ if(criando) modoCriar(false) });
   function mostraQuem(){ var q=$('#quem'), n=le('xb_nome'); q.hidden=!n; q.textContent=n?('Caixa: '+n):'' }
   $('#pinOk').onclick=function(){
     var pin=$('#pin').value.trim(), nome=$('#nomeCaixa').value.trim().replace(/[<>]/g,''), e=$('#pinErr');
     e.hidden=true;
     if(nome.length<2){e.hidden=false;e.textContent='Digite o seu primeiro nome.';return}
-    if(pin.length<8){e.hidden=false;e.textContent='A senha tem de 8 a 32 caracteres.';return}
+    if(!/^\d{4}$/.test(pin)){e.hidden=false;e.textContent='A senha tem 4 números.';return}
+    if(criando && $('#pin2').value.trim()!==pin){e.hidden=false;e.textContent='As duas senhas não são iguais. Digite de novo.';return}
+    var rotulo=criando?'Criar minha senha e entrar':'Entrar';
     $('#pinOk').disabled=true; $('#pinOk').textContent='Conferindo…';
-    entrarComPin(pin,nome,function(r){
-      $('#pinOk').disabled=false; $('#pinOk').textContent='Entrar';
-      if(r && r.nome){ guarda('xb_pin',pin); guarda('xb_nome',r.nome); $('#pin').value=''; $('#nomeCaixa').value=''; mostraQuem(); iniciaBalcao() }
-      else { e.hidden=false; e.textContent = r==='pin' ? 'Senha incorreta.' : r==='nome' ? 'Esse nome não está na lista de caixas. Peça ao dono para incluir você.' : 'Sem conexão com a planilha. Tente de novo.' }
+    entrarComPin(pin,nome,criando,function(r){
+      $('#pinOk').disabled=false; $('#pinOk').textContent=rotulo;
+      if(r && r.nome){ guarda('xb_pin',pin); guarda('xb_nome',r.nome); $('#pin').value=''; $('#nomeCaixa').value=''; modoCriar(false); mostraQuem(); iniciaBalcao(); return }
+      if(r==='criar'){ modoCriar(true); e.hidden=false; e.textContent='Primeira vez de '+nome+': repita a senha abaixo para criar.'; $('#pin2').focus(); return }
+      e.hidden=false;
+      e.textContent = r==='pin' ? 'Senha incorreta.'
+        : r==='nome' ? 'Esse nome não está na lista de caixas. Peça ao dono para incluir você.'
+        : r==='bloqueado' ? 'Muitas tentativas erradas. Espere 10 minutos ou peça ao dono para zerar a sua senha.'
+        : r==='pin_fraco' ? 'Senha fácil demais (como 1234 ou 0000). Escolha outra de 4 números.'
+        : r==='pin_formato' ? 'A senha tem 4 números.'
+        : 'Sem conexão com a planilha. Tente de novo.';
     });
   };
-  $('#sair').onclick=function(){ apaga('xb_pin'); apaga('xb_nome'); mostraQuem(); paraCamera(); $('#resultado').hidden=true; $('#calc').hidden=true; mostra('telaPin') };
+  $('#sair').onclick=function(){ modoCriar(false); apaga('xb_pin'); apaga('xb_nome'); mostraQuem(); paraCamera(); $('#resultado').hidden=true; $('#calc').hidden=true; mostra('telaPin') };
 
   /* ---- balcão ---- */
   function iniciaBalcao(){
@@ -201,7 +222,7 @@ var EXEC_URL = (window.XB_CONFIG && window.XB_CONFIG.EXEC_URL) || '';   /* vem d
     chamar('acao=validar&codigo='+encodeURIComponent('XB-'+cod)+'&pin='+encodeURIComponent(le('xb_pin')||'')+'&quem='+encodeURIComponent(le('xb_nome')||''),function(r){
       btn.disabled=false; btn.textContent='Conferir código';
       if(!r){ erro('Sem conexão com a planilha. Confira a internet e tente de novo.'); return }
-      if(r.ok===false && (r.erro==='pin' || r.erro==='nome')){ apaga('xb_pin'); apaga('xb_nome'); mostraQuem(); mostra('telaPin'); return }
+      if(desloga(r)) return
       atual={codigo:cod,r:r}; renderResultado(r,cod,false);
       registraHist(cod,r.estado,r.nome);
     });
@@ -240,7 +261,7 @@ var EXEC_URL = (window.XB_CONFIG && window.XB_CONFIG.EXEC_URL) || '';   /* vem d
     var b=$('#usar'); b.disabled=true; b.textContent='Marcando…';
     chamar('acao=usar&codigo='+encodeURIComponent('XB-'+atual.codigo)+'&pin='+encodeURIComponent(le('xb_pin')||'')+'&quem='+encodeURIComponent(le('xb_nome')||''),function(r){
       if(!r){ b.disabled=false; b.textContent='Usar agora (marcar como usado)'; erro('Sem conexão. Não foi marcado como usado; tente de novo.'); return }
-      if(r.ok===false && (r.erro==='pin' || r.erro==='nome')){ apaga('xb_pin'); apaga('xb_nome'); mostraQuem(); mostra('telaPin'); return }
+      if(desloga(r)) return
       if(r.estado==='usado_agora'){ registraHist(atual.codigo,'usado_agora',r.nome) }
       renderResultado(r,atual.codigo,true);
     });
@@ -260,7 +281,7 @@ var EXEC_URL = (window.XB_CONFIG && window.XB_CONFIG.EXEC_URL) || '';   /* vem d
     chamar('acao=buscar&telefone='+encodeURIComponent(tel)+'&pin='+encodeURIComponent(le('xb_pin')||'')+'&quem='+encodeURIComponent(le('xb_nome')||''),function(r){
       btn.disabled=false; btn.textContent='Buscar cupom pelo celular';
       if(!r){ erro('Sem conexão com a planilha. Confira a internet e tente de novo.'); return }
-      if(r.ok===false && (r.erro==='pin' || r.erro==='nome')){ apaga('xb_pin'); apaga('xb_nome'); mostraQuem(); mostra('telaPin'); return }
+      if(desloga(r)) return
       if(r.estado==='inexistente' || !r.codigo){ erro('Nenhum cadastro com esse celular. Confira os números ou peça para o cliente se cadastrar.'); return }
       $('#codigo').value='XB-'+r.codigo; $('#telBusca').value=''; $('#perdeu').open=false;
       atual={codigo:r.codigo,r:r}; renderResultado(r,r.codigo,false); registraHist(r.codigo,r.estado,r.nome);
