@@ -2188,7 +2188,7 @@ var qrcode = function() {
   }
   $('#f').addEventListener('submit',function(ev){
     ev.preventDefault();
-    var nome=$('#nome').value.replace(/[<>]/g,'').trim().replace(/\s+/g,' '), tel=$('#tel').value.replace(/\D/g,''),
+    var nome=$('#nome').value.replace(/<[^>]*>/g,'').replace(/[<>]/g,'').trim().replace(/\s+/g,' '), tel=$('#tel').value.replace(/\D/g,''),
         ok1=$('#ok1').checked, ok2=$('#ok2').checked, nasc=lerNasc($('#nasc').value.trim());
     ['nome','nasc','tel','ok1'].forEach(function(k){err(k,'')});
     var primeiro=null, bad=function(id,m){err(id,m);if(!primeiro)primeiro=id};

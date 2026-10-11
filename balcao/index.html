@@ -72,7 +72,7 @@ video{width:100%;border-radius:14px;background:#000;aspect-ratio:1;object-fit:co
   <section id="telaPin" hidden>
     <h2>Senha do balcão</h2>
     <label for="pin">Digite a senha da loja</label>
-    <input id="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="••••">
+    <input id="pin" type="password" autocomplete="off" autocapitalize="none" maxlength="32" placeholder="senha do balcão">
     <div class="err" id="pinErr" hidden></div>
     <button class="go" id="pinOk" type="button">Entrar</button>
     <p class="msg">A senha fica guardada só neste celular.</p>
@@ -146,10 +146,12 @@ var NOME_APARELHO = 'Caixa'; /* aparece na planilha em "usado_por" */
   /* ---- código a partir de texto, link ou QR ---- */
   function extraiCodigo(t){
     t=String(t||'').toUpperCase();
-    var m=/XB[-_ ]?([A-Z0-9]{6})/.exec(t);
+    var h=t.lastIndexOf('#'); if(h>=0) t=t.slice(h+1);      /* link do QR: vale o que vem depois do # */
+    t=t.trim();
+    var m=/^XB[-_ ]?([A-Z0-9]{6})$/.exec(t);                /* exato: letras a mais NÃO são cortadas em silêncio */
     if(m) return m[1];
-    var s=t.replace(/[^A-Z0-9]/g,'');
-    return s.length===6 ? s : '';
+    var s=t.replace(/[\s-]/g,'');
+    return /^[A-Z0-9]{6}$/.test(s) ? s : '';
   }
 
   /* ---- senha ---- */
@@ -163,12 +165,12 @@ var NOME_APARELHO = 'Caixa'; /* aparece na planilha em "usado_por" */
   $('#pinOk').onclick=function(){
     var pin=$('#pin').value.trim(), e=$('#pinErr');
     e.hidden=true;
-    if(pin.length<4){e.hidden=false;e.textContent='A senha tem de 4 a 12 caracteres.';return}
+    if(pin.length<8){e.hidden=false;e.textContent='A senha tem de 8 a 32 caracteres.';return}
     $('#pinOk').disabled=true; $('#pinOk').textContent='Conferindo…';
     entrarComPin(pin,function(r){
       $('#pinOk').disabled=false; $('#pinOk').textContent='Entrar';
       if(r==='ok'){ guarda('xb_pin',pin); $('#pin').value=''; iniciaBalcao() }
-      else { e.hidden=false; e.textContent = r==='pin' ? 'Senha incorreta ou bloqueada por alguns minutos.' : 'Sem conexão com a planilha. Tente de novo.' }
+      else { e.hidden=false; e.textContent = r==='pin' ? 'Senha incorreta.' : 'Sem conexão com a planilha. Tente de novo.' }
     });
   };
   $('#sair').onclick=function(){ apaga('xb_pin'); paraCamera(); $('#resultado').hidden=true; $('#calc').hidden=true; mostra('telaPin') };
@@ -240,13 +242,28 @@ var NOME_APARELHO = 'Caixa'; /* aparece na planilha em "usado_por" */
   $('#codigo').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); confere($('#codigo').value) } });
 
   /* ---- calculadora do desconto ---- */
-  function num(v){ v=String(v||'').replace(/\./g,'').replace(',','.'); var n=parseFloat(v); return isNaN(n)?0:n }
+  function num(v){
+    v=String(v||'').trim(); if(/^-/.test(v)) return 0;
+    v=v.replace(/[^\d.,]/g,''); if(!v) return 0;
+    var c=v.lastIndexOf(','), p=v.lastIndexOf('.');
+    if(c>=0 && p>=0){ v = c>p ? v.replace(/\./g,'').replace(',','.') : v.replace(/,/g,'') }   /* o último símbolo é o decimal */
+    else if(c>=0){ v=v.replace(/,(?=.*,)/g,'').replace(',','.') }
+    else if(p>=0){
+      var q=v.split('.');
+      if(q.length>2) v=q.join('');                                  /* 1.234.567 */
+      else if(q[1].length===3 && q[0]!=='0' && q[0].length<=3) v=q.join('');   /* 1.234 = mil duzentos e trinta e quatro */
+      /* senão é decimal: 100.50 = cem e cinquenta */
+    }
+    var n=parseFloat(v); return isNaN(n)||n<0?0:n;
+  }
   function brl(n){ return 'R$ '+n.toFixed(2).replace('.',',') }
   function recalc(){
     var t=num($('#total').value), c=num($('#cig').value), res=$('#calcRes');
     if(t<=0){ res.hidden=true; return }
+    if(c>t){ res.hidden=false; res.className='res vencido'; $('#calcVal').textContent='Confira os valores'; $('#calcDet').textContent='Cigarros ('+brl(c)+') maior que o total ('+brl(t)+').'; return }
+    if(t>20000){ res.hidden=false; res.className='res vencido'; $('#calcVal').textContent='Confira o total'; $('#calcDet').textContent='O total digitado ('+brl(t)+') está muito alto. Use vírgula nos centavos.'; return }
     var base=Math.max(t-c,0), d=Math.round(base*pct)/100;
-    res.hidden=false; $('#calcVal').textContent='Desconto: '+brl(d);
+    res.hidden=false; res.className='res valido'; $('#calcVal').textContent='Desconto: '+brl(d);
     $('#calcDet').textContent=pct+'% de '+brl(base)+' (total '+brl(t)+(c>0?' menos cigarros '+brl(c):'')+')  ·  a pagar: '+brl(t-d);
   }
   $('#total').addEventListener('input',recalc); $('#cig').addEventListener('input',recalc);
