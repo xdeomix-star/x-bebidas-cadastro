@@ -279,6 +279,7 @@ summary{min-height:44px;display:flex;align-items:center}
           <div class="err" id="ok1-e" hidden></div>
           <label class="chk" for="ok2"><input id="ok2" type="checkbox"><span>Quero ofertas por WhatsApp.<small>Opcional. Responda SAIR para parar.</small></span></label>
           <button class="go pulse" type="submit">Quero meus 5% →</button>
+          <p class="prox" id="avisoEnvio" role="alert" hidden style="color:#ffb4a8;font-weight:600"></p>
           <p class="prox">Seu cupom aparece na próxima tela.</p>
         </form>
         <button class="back" id="trocar" type="button">← Trocar a bebida</button>
@@ -312,7 +313,6 @@ summary{min-height:44px;display:flex;align-items:center}
         <p class="print">Tire um print deste cupom para guardar.</p>
         <p class="convite" id="conviteGrupo" hidden><b>Ações e promoções exclusivas</b> para clientes no nosso grupo do WhatsApp.</p>
         <a id="grupoLink" class="go zap" target="_blank" rel="noopener" href="#" hidden>Entrar no grupo de ofertas</a>
-        <a id="confirmaLink" class="go confirma" target="_blank" rel="noopener" href="#" hidden>Enviar meu cadastro</a>
         <p class="nota" id="confirmaNota"></p>
         <button class="back" id="outro" type="button" hidden>Cadastrar outra pessoa</button>
       </div>
@@ -2209,8 +2209,8 @@ var qrcode = function() {
     var gl=$('#grupoLink'); gl.hidden=true;
     if(GRUPO_URL){ gl.href=GRUPO_URL; gl.hidden=false; $('#conviteGrupo').hidden=false;
       gl.classList.toggle('pulse',!!ok2) }else{ $('#conviteGrupo').hidden=true }
-    var link=$('#confirmaLink'), nota=$('#confirmaNota');
-    link.hidden=true; link.href='#'; nota.textContent='';
+    var nota=$('#confirmaNota'), aviso=$('#avisoEnvio');
+    nota.textContent=''; aviso.hidden=true; aviso.textContent='';
     var primeiroNome=nome.split(' ')[0], vd=new Date(Date.now()+DIAS*86400000);
     $('#s3t').textContent=primeiroNome+', seu cupom está pronto';
     $('#tPct').textContent=PCT;
@@ -2220,29 +2220,28 @@ var qrcode = function() {
     $('#tDono').setAttribute('data-nome','Cupom de '+primeiroNome);
     $('#tDono').textContent='Cupom de '+primeiroNome+' · celular final '+tel.slice(-4);
     $('#qrBox').hidden=true;
-    $('#f').reset();
-    passo('s3');
     if(EXEC_URL){
-      nota.textContent='Gerando o código do seu cupom…';
+      /* o cupom só aparece depois que o servidor CONFIRMA; se falhar, a pessoa continua aqui, com os dados preenchidos */
+      btnEnv.disabled=true; btnEnv.textContent='Enviando…';
       chamar('acao=registrar&'+q,function(r){
+        btnEnv.disabled=false; btnEnv.textContent=txtEnv;
         if(r && r.ok && r.codigo){
+          $('#f').reset(); passo('s3');
           mostraCodigo(r.codigo,r.valido_ate_dia,r.tel_final);
           nota.textContent='Cadastro confirmado.';
           guardaCadastro(primeiroNome);
         } else if(r && r.ok && r.duplicado){
           mostraJa(primeiroNome,'telefone',false);
+        } else if(r && r.ok===false && r.erro==='menor'){
+          $('#f').reset(); passo('sm');
         } else if(r && r.ok===false){
-          nota.textContent = r.erro==='menor' ? '' : 'Não foi possível concluir. Confira os dados e tente de novo.';
-          if(r.erro==='menor') passo('sm');
+          aviso.textContent='Não foi possível concluir. Confira os dados e tente de novo.'; aviso.hidden=false;
         } else {
-          /* servidor sem resposta: envia do jeito antigo; o cupom fica sem QR e vale pelo celular */
-          var url=EXEC_URL+(EXEC_URL.indexOf('?')>=0?'&':'?')+q;
-          var volta=function(){link.href=url;link.hidden=false;nota.textContent='Toque para concluir o cadastro.'};
-          nota.textContent='Cadastro enviado. Se o QR não aparecer, diga o seu celular no caixa: ele encontra o seu cupom.';
-          try{ fetch(url,{mode:'no-cors',keepalive:true}).then(function(){guardaCadastro(primeiroNome)}).catch(volta) }catch(x){volta()}
+          aviso.textContent='Não conseguimos falar com a loja agora. Toque em "'+txtEnv+'" para tentar de novo.'; aviso.hidden=false;
         }
-      },15000);
+      },20000);
     } else {
+      $('#f').reset(); passo('s3');
       mostraCodigo('TESTE1','',tel.slice(-4),true);
       nota.textContent='Modo de teste: o envio ainda não foi ligado à planilha da loja. O código acima é só um exemplo.';
     }
