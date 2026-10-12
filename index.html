@@ -271,7 +271,7 @@ summary{min-height:44px;display:flex;align-items:center}
         <form id="f" novalidate>
           <div><label for="nome">Seu nome</label><input id="nome" type="text" autocomplete="given-name" autocapitalize="words" placeholder="Como podemos te chamar?" maxlength="200"><div class="err" id="nome-e" hidden></div></div>
           <div><label for="nasc">Data de nascimento</label><input id="nasc" type="text" inputmode="numeric" autocomplete="bday" placeholder="DD/MM/AAAA" maxlength="10"><div class="err" id="nasc-e" hidden></div></div>
-          <div><label for="tel">Seu WhatsApp</label><input id="tel" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="(62) 9XXXX-XXXX" maxlength="16"><div class="err" id="tel-e" hidden></div></div>
+          <div><label for="tel">Seu WhatsApp</label><input id="tel" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="(62) 9XXXX-XXXX"><div class="err" id="tel-e" hidden></div></div>
           
           
           <div class="avisoGrupo" id="avisoGrupo" hidden><b>Grupo do WhatsApp:</b> promoções e ações exclusivas para quem participa.</div>
@@ -1984,10 +1984,10 @@ var qrcode = function() {
     {n:'Vodka ou Gin', c:'Vodka ou Gin'},
     {n:'Outra bebida', c:'Outra', outra:true}
   ];
-  var ORIGENS = {qr:1, instagram:1, whatsapp:1, link:1, balcao:1};
+  var TEXTO_VERSAO = 'v2-2026-10-12';          /* mude quando mudar o texto de consentimento: vai para a planilha em texto_versao */
   var $ = function(s){return document.querySelector(s)};
   var tok = (location.hash||'').replace('#','').toLowerCase();
-  var origem = ORIGENS[tok] ? tok : 'link';
+  var origem = (/^[a-z0-9_-]{1,20}$/.test(tok) && tok !== 'limpar') ? tok : 'link';
   var sel = null, bebida = '';
   var hoje = new Date();
 
@@ -2048,7 +2048,7 @@ var qrcode = function() {
     $('#oferta').innerHTML='<span class="r1"><small class="r0">Sua bebida preferida</small>'+esc(bebida)+'</span><span class="r4">✓ '+PCT+'% OFF em tudo na 1ª compra, exceto cigarros</span>';
   }
   criaCombo($('#beb'), $('#bebLista'), BEBIDAS, function(){ err('beb',''); setTimeout(irDados, 160) });
-  $('#beb').addEventListener('input',function(){ if($('#beb').getAttribute('aria-invalid')==='true') err('beb','') });
+  $('#beb').addEventListener('input',function(){ var n=$('#beb').value.length; if(n>=80) err('beb','Máximo de 80 letras.'); else if($('#beb').getAttribute('aria-invalid')==='true') err('beb','') });
   $('#beb').addEventListener('keydown',function(e){
     if(e.key==='Enter' && $('#bebLista').hidden){ e.preventDefault(); irDados() }
   });
@@ -2085,7 +2085,10 @@ var qrcode = function() {
 
   /* passo 2: máscaras e validação */
   $('#tel').addEventListener('input',function(e){
-    var d=e.target.value.replace(/\D/g,'').slice(0,11),o='';
+    var d=e.target.value.replace(/\D/g,''),o='';
+    if(d.length>11&&d.indexOf('55')===0) d=d.slice(2);      /* +55 colado */
+    if(d.length>11&&d.charAt(0)==='0') d=d.slice(1);        /* 0 na frente */
+    d=d.slice(0,11);
     if(d.length>0)o='('+d.slice(0,2); if(d.length>=3)o+=') '+d.slice(2,7); if(d.length>=8)o+='-'+d.slice(7);
     e.target.value=o;
   });
@@ -2122,6 +2125,8 @@ var qrcode = function() {
   $('#nasc').addEventListener('input',function(e){
     var raw=e.target.value, iso=/^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
     if(iso) raw=iso[3]+iso[2]+iso[1];
+    var dm=/^\s*(\d{1,2})\D+(\d{1,2})\D+(\d{4})\s*$/.exec(raw);      /* 1/1/1990 colado */
+    if(dm) raw=('0'+dm[1]).slice(-2)+('0'+dm[2]).slice(-2)+dm[3];
     var v=raw.replace(/\D/g,'').slice(0,8), o=v.slice(0,2);
     if(v.length>2)o+='/'+v.slice(2,4); if(v.length>4)o+='/'+v.slice(4);
     e.target.value=o;
@@ -2133,15 +2138,18 @@ var qrcode = function() {
     var idade=h.getFullYear()-y-((h.getMonth()<mo-1||(h.getMonth()===mo-1&&h.getDate()<d))?1:0);
     return {iso:y+'-'+('0'+mo).slice(-2)+'-'+('0'+d).slice(-2),idade:idade};
   }
-  function guardaCadastro(nomeCurto){try{localStorage.setItem('xb_cadastro',JSON.stringify({n:nomeCurto,t:Date.now()}))}catch(x){}}
+  function guardaCadastro(nomeCurto,codigo){try{localStorage.setItem('xb_cadastro',JSON.stringify({n:nomeCurto,c:codigo||'',t:Date.now()}))}catch(x){}}
   function lerCadastro(){try{return JSON.parse(localStorage.getItem('xb_cadastro')||'null')}catch(x){return null}}
-  function mostraJa(nomeCurto,tipo,usado){
-    $('#sjt').textContent=(nomeCurto?nomeCurto+', v':'V')+'ocê já tem cadastro';
+  function mostraJa(nomeCurto,tipo,estado){
+    /* privacidade: para celular/nome vindos da digitação NÃO dizemos se o desconto foi usado nem usamos o nome digitado */
+    var proprio=(tipo==='aparelho');
+    $('#sjt').textContent=(proprio&&nomeCurto)?nomeCurto+', você já tem cadastro':'Você já tem cadastro';
     var txt;
-    if(tipo==='nome_nasc') txt='Encontramos um cadastro com esse nome e data de nascimento. Diga no caixa o celular que você usou da primeira vez.';
-    else if(tipo==='aparelho') txt='Este aparelho já fez um cadastro. Diga o seu celular no caixa ou no drive-thru para usar o seu desconto.';
-    else if(usado) txt='O seu desconto de 1ª compra já foi usado. Fique de olho nas promoções e ações exclusivas do nosso grupo.';
-    else txt='O seu desconto continua valendo. Diga o seu celular no caixa ou no drive-thru.';
+    if(proprio && estado==='usado') txt='O seu desconto de 1ª compra já foi usado. Fique de olho nas promoções e ações exclusivas do nosso grupo.';
+    else if(proprio && estado==='vencido') txt='O seu cupom venceu. Fique de olho nas promoções e ações exclusivas do nosso grupo.';
+    else if(proprio && String(estado).indexOf('valido:')===0) txt='O seu cupom continua valendo até '+String(estado).slice(7)+'. Diga o seu celular no caixa ou no drive-thru.';
+    else if(proprio) txt='Este aparelho já fez um cadastro. Diga o seu celular no caixa ou no drive-thru: ele encontra o seu cupom.';
+    else txt='Este celular já está cadastrado. Diga o seu celular no caixa ou no drive-thru: ele encontra o seu cupom.';
     $('#sjp').textContent=txt;
     var g=$('#sjGrupo'); if(g){ if(GRUPO_URL){g.href=GRUPO_URL;g.hidden=false}else{g.hidden=true} }
     $('#f').reset(); passo('sj');
@@ -2205,7 +2213,7 @@ var qrcode = function() {
     var seguir=function(){
     var q='nome='+encodeURIComponent(nome)+'&telefone='+encodeURIComponent(tel)+
           '&bebida='+encodeURIComponent(bebidaEnvio||bebida)+'&origem='+encodeURIComponent(origem)+
-          '&nasc='+encodeURIComponent(nasc.iso)+'&ok1=1&ok2='+(ok2?'1':'0');
+          '&nasc='+encodeURIComponent(nasc.iso)+'&ok1=1&ok2='+(ok2?'1':'0')+'&tv='+encodeURIComponent(TEXTO_VERSAO);
     var gl=$('#grupoLink'); gl.hidden=true;
     if(GRUPO_URL){ gl.href=GRUPO_URL; gl.hidden=false; $('#conviteGrupo').hidden=false;
       gl.classList.toggle('pulse',!!ok2) }else{ $('#conviteGrupo').hidden=true }
@@ -2229,9 +2237,9 @@ var qrcode = function() {
           $('#f').reset(); passo('s3');
           mostraCodigo(r.codigo,r.valido_ate_dia,r.tel_final);
           nota.textContent='Cadastro confirmado.';
-          guardaCadastro(primeiroNome);
+          guardaCadastro(primeiroNome,r.codigo);
         } else if(r && r.ok && r.duplicado){
-          mostraJa(primeiroNome,'telefone',false);
+          mostraJa('','telefone','');
         } else if(r && r.ok===false && r.erro==='menor'){
           $('#f').reset(); passo('sm');
         } else if(r && r.ok===false){
@@ -2250,12 +2258,20 @@ var qrcode = function() {
       btnEnv.disabled=true; btnEnv.textContent='Conferindo seu cadastro…';
       consulta(tel,nome,nasc.iso,function(r){
         btnEnv.disabled=false; btnEnv.textContent=txtEnv;
-        if(r && r.existe) mostraJa(nome.split(' ')[0], r.motivo, r.usado); else seguir();
+        if(r && r.existe) mostraJa('','telefone',''); else seguir();
       });
     } else seguir();
   });
   /* ao abrir: aparelho que já fez cadastro vê "já cadastrado" (o tablet #balcao fica livre) */
-  (function(){ var c=lerCadastro(); if(c && !balcao) mostraJa(c.n,'aparelho',false) })();
+  (function(){
+    var c=lerCadastro(); if(!c || balcao) return;
+    mostraJa(c.n,'aparelho','');
+    if(EXEC_URL && c.c){      /* pergunta à planilha como está o cupom deste aparelho */
+      chamar('acao=cupom&codigo='+encodeURIComponent('XB-'+c.c),function(r){
+        if(r && r.ok && r.estado!=='inexistente') mostraJa(c.n,'aparelho', r.estado==='valido' ? 'valido:'+r.valido_ate_dia : r.estado);
+      },8000);
+    }
+  })();
 })();
 </script>
 
