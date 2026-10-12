@@ -215,9 +215,9 @@ var EXEC_URL = (window.XB_CONFIG && window.XB_CONFIG.EXEC_URL) || '';   /* vem d
     if(h){ $('#codigo').value='XB-'+h; confere(h); try{history.replaceState(null,'',location.pathname)}catch(x){} }
   }
   function confere(cod){
-    erro(''); cod=extraiCodigo(cod);
+    erro(''); $('#resultado').hidden=true; $('#calc').hidden=true; atual=null;   /* nunca deixa o cartão do cliente anterior na tela */
+    cod=extraiCodigo(cod);
     if(!cod){ erro('Digite o código do cupom: XB- e mais 6 letras ou números.'); return }
-    $('#resultado').hidden=true; $('#calc').hidden=true;
     var btn=$('#conferir'); btn.disabled=true; btn.textContent='Conferindo…';
     chamar('acao=validar&codigo='+encodeURIComponent('XB-'+cod)+'&pin='+encodeURIComponent(le('xb_pin')||'')+'&quem='+encodeURIComponent(le('xb_nome')||''),function(r){
       btn.disabled=false; btn.textContent='Conferir código';
@@ -274,9 +274,9 @@ var EXEC_URL = (window.XB_CONFIG && window.XB_CONFIG.EXEC_URL) || '';   /* vem d
   $('#conferir').onclick=function(){confere($('#codigo').value)};
   /* cliente perdeu o cupom: o caixa (já identificado) busca pelo celular e recebe o código */
   $('#buscar').onclick=function(){
-    erro(''); var tel=$('#telBusca').value.replace(/\D/g,'');
+    erro(''); $('#resultado').hidden=true; $('#calc').hidden=true; atual=null;
+    var tel=$('#telBusca').value.replace(/\D/g,'');
     if(tel.length!==11){ erro('Digite o celular completo, com DDD e o 9.'); return }
-    $('#resultado').hidden=true; $('#calc').hidden=true;
     var btn=$('#buscar'); btn.disabled=true; btn.textContent='Buscando…';
     chamar('acao=buscar&telefone='+encodeURIComponent(tel)+'&pin='+encodeURIComponent(le('xb_pin')||'')+'&quem='+encodeURIComponent(le('xb_nome')||''),function(r){
       btn.disabled=false; btn.textContent='Buscar cupom pelo celular';
