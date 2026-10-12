@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0a0b0c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Balcão X">
+
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>PRÉVIA · Balcão X Bebidas</title>
+<style>
+:root{--bg:#0a0b0c;--card:#15181b;--line:#2b3035;--ink:#f8f3e9;--muted:#aaa59a;--gold:#ff6600;--teal:#2bd6c8;--ok:#1fbf5b;--bad:#e5484d;--warn:#f5a524}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-text-size-adjust:100%}
+body{min-height:100vh;padding:env(safe-area-inset-top) 16px calc(24px + env(safe-area-inset-bottom))}
+main{max-width:520px;margin:0 auto}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+header h1{font-size:1.05rem;margin:0;letter-spacing:.02em}
+header h1 b{color:var(--gold)}
+.sair{background:none;border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:8px 12px;font:inherit;font-size:.85rem;min-height:44px}
+section{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin-top:14px}
+h2{font-size:1rem;margin:0 0 12px;color:var(--muted);font-weight:600}
+label{display:block;font-size:.85rem;color:var(--muted);margin:10px 0 6px}
+input{width:100%;font:inherit;font-size:1.15rem;color:var(--ink);background:#0d0f10;border:1.5px solid var(--line);border-radius:12px;padding:14px;min-height:56px}
+input:focus{outline:0;border-color:var(--teal);box-shadow:0 0 0 3px rgba(43,214,200,.18)}
+.cod{text-transform:uppercase;letter-spacing:.12em;font-weight:700}
+button.go{width:100%;min-height:60px;border:0;border-radius:14px;font:inherit;font-size:1.1rem;font-weight:800;color:#1a0b00;background:linear-gradient(180deg,#ff8a3d,#ff6600);margin-top:12px}
+button.sec{width:100%;min-height:56px;border:1.5px solid var(--line);border-radius:14px;font:inherit;font-size:1rem;font-weight:700;color:var(--ink);background:transparent;margin-top:10px}
+button:disabled{opacity:.5}
+.linha{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+video{width:100%;border-radius:14px;background:#000;aspect-ratio:1;object-fit:cover}
+.res{border-radius:18px;padding:20px;margin-top:14px;text-align:center}
+.res.valido,.res.usado_agora{background:rgba(31,191,91,.14);border:2px solid var(--ok)}
+.res.usado,.res.inexistente{background:rgba(229,72,77,.14);border:2px solid var(--bad)}
+.res.vencido{background:rgba(245,165,36,.14);border:2px solid var(--warn)}
+.res .st{font-size:1.6rem;font-weight:900;letter-spacing:.02em}
+.res.valido .st,.res.usado_agora .st{color:var(--ok)}
+.res.usado .st,.res.inexistente .st{color:var(--bad)}
+.res.vencido .st{color:var(--warn)}
+.res .nome{font-size:1.5rem;font-weight:800;margin-top:8px}
+.res .det{color:var(--muted);margin-top:6px;line-height:1.5}
+.res .reg{margin-top:12px;font-size:1.05rem;line-height:1.5}
+.res .reg b{color:var(--gold)}
+.hist{list-style:none;margin:0;padding:0}
+.hist li{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:.92rem}
+.hist li:first-child{border-top:0}
+.hist .e-valido,.hist .e-usado_agora{color:var(--ok)}
+.hist .e-usado,.hist .e-inexistente{color:var(--bad)}
+.hist .e-vencido{color:var(--warn)}
+.msg{color:var(--muted);font-size:.9rem;line-height:1.45;margin-top:10px}
+.err{color:var(--bad);font-size:.9rem;margin-top:8px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1><b>X</b> Bebidas · Balcão</h1>
+    <span id="quem" style="margin-left:auto;margin-right:10px;font-size:.9rem;color:var(--ok);font-weight:700" hidden></span>
+    <button class="sair" id="sair" type="button" hidden>Sair</button>
+  </header>
+  <div style="background:#fff3cd;color:#5c4400;border:2px dashed #c79100;border-radius:12px;padding:10px 12px;margin:0 0 14px;font-size:.9rem;line-height:1.45">
+    <b>PRÉVIA para revisão (v8: senha da loja 1234)</b>: dados de exemplo, nada é gravado na loja.<br>
+    <b>Como entrar:</b> toque no seu <b>primeiro nome</b> abaixo e digite a senha da loja: <b>1234</b>. "Reiniciar teste" apaga os cupons usados desta prévia.
+    <span style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0"><button type="button" class="sec" style="width:auto;padding:8px 12px;background:#fff;color:#14100c;border:1.5px solid #14100c;font-weight:700;font-size:.9rem" onclick="document.getElementById('nomeCaixa').value='Maria'">Maria</button><button type="button" class="sec" style="width:auto;padding:8px 12px;background:#fff;color:#14100c;border:1.5px solid #14100c;font-weight:700;font-size:.9rem" onclick="document.getElementById('nomeCaixa').value='João'">João</button><button type="button" class="sec" style="width:auto;padding:8px 12px;background:#fff;color:#14100c;border:1.5px solid #14100c;font-weight:700;font-size:.9rem" onclick="document.getElementById('nomeCaixa').value='Ana'">Ana</button><button type="button" class="sec" style="width:auto;padding:8px 12px;background:#fff;color:#14100c;border:1.5px solid #14100c;font-weight:700;font-size:.9rem" onclick="document.getElementById('nomeCaixa').value='Pedro'">Pedro</button><button type="button" class="sec" style="width:auto;padding:8px 12px;background:#fff;color:#14100c;border:1.5px solid #14100c;font-weight:700;font-size:.9rem" onclick="document.getElementById('nomeCaixa').value='Luiza'">Luiza</button><button type="button" class="sec" style="width:auto;padding:8px 12px;background:#fff;color:#14100c;border:1.5px solid #14100c;font-weight:700;font-size:.9rem" onclick="document.getElementById('nomeCaixa').value='Carlos'">Carlos</button></span>
+    <b>Cupons para testar:</b>
+    <span style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0"><button type="button" class="sec" style="width:auto;padding:8px 12px;background:#fff;color:#14100c;border:1.5px solid #14100c;font-weight:700;font-size:.9rem" onclick="document.getElementById('codigo').value='XB-VALID1';document.getElementById('conferir').click()">Cupom válido 1</button><button type="button" class="sec" style="width:auto;padding:8px 12px;background:#fff;color:#14100c;border:1.5px solid #14100c;font-weight:700;font-size:.9rem" onclick="document.getElementById('codigo').value='XB-VALID2';document.getElementById('conferir').click()">Cupom válido 2</button><button type="button" class="sec" style="width:auto;padding:8px 12px;background:#fff;color:#14100c;border:1.5px solid #14100c;font-weight:700;font-size:.9rem" onclick="document.getElementById('codigo').value='XB-VALID3';document.getElementById('conferir').click()">Cupom válido 3</button><button type="button" class="sec" style="width:auto;padding:8px 12px;background:#fff;color:#14100c;border:1.5px solid #14100c;font-weight:700;font-size:.9rem" onclick="document.getElementById('codigo').value='XB-USADO1';document.getElementById('conferir').click()">Já usado</button><button type="button" class="sec" style="width:auto;padding:8px 12px;background:#fff;color:#14100c;border:1.5px solid #14100c;font-weight:700;font-size:.9rem" onclick="document.getElementById('codigo').value='XB-VENCI1';document.getElementById('conferir').click()">Vencido</button><button type="button" class="sec" style="width:auto;padding:8px 12px;background:#fff;color:#14100c;border:1.5px solid #14100c;font-weight:700;font-size:.9rem" onclick="document.getElementById('codigo').value='XB-ZZZ999';document.getElementById('conferir').click()">Não existe</button></span>
+    <b>Cliente perdeu o cupom?</b> Abra "Buscar pelo celular" e digite <b>(62) 91111-2222</b> ou <b>(62) 93333-4444</b>.<br>
+    <b>Registro simulado</b> (quem validou, e a que horas):
+    <div id="regSim" style="margin-top:4px;background:#fffbe9;border:1px solid #e4cf8a;border-radius:8px;padding:6px 8px;font-size:.85rem">Nenhum desconto validado ainda.</div>
+    <span style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><button type="button" class="sec" style="width:auto;padding:8px 12px;background:#fff;color:#14100c;border:1.5px solid #14100c;font-weight:700;font-size:.9rem" onclick="window.__zerarPrevia()">Reiniciar teste</button></span>
+  </div>
+
+  <!-- aplicativo ainda não ligado -->
+  <section id="desligado" hidden>
+    <h2>Aplicativo ainda não ligado</h2>
+    <p class="msg">Falta ligar a planilha da loja. Peça a quem configurou para colocar o endereço do servidor neste aplicativo.</p>
+  </section>
+
+  <!-- senha -->
+  <section id="telaPin" hidden>
+    <h2>Entrar no balcão</h2>
+    <label for="nomeCaixa">Seu primeiro nome</label>
+    <input id="nomeCaixa" type="text" autocomplete="off" autocapitalize="words" maxlength="30" placeholder="ex.: Maria">
+    <label for="pin">Senha da loja (4 números)</label>
+    <input id="pin" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="4" placeholder="••••">
+    <div id="primeiro" hidden>
+      <p class="msg" style="color:var(--ok);font-weight:700;margin:10px 0 4px">Primeiro acesso: crie a sua senha de 4 números.</p>
+      <label for="pin2">Digite a mesma senha de novo</label>
+      <input id="pin2" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="4" placeholder="••••">
+    </div>
+    <div class="err" id="pinErr" hidden></div>
+    <button class="go" id="pinOk" type="button">Entrar</button>
+    <p class="msg">Digite o seu primeiro nome e a senha da loja. Depois o celular lembra.</p>
+  </section>
+
+  <!-- balcão -->
+  <div id="telaBalcao" hidden>
+    <section>
+      <h2>Conferir o cupom do cliente</h2>
+      <button class="go" id="lerQr" type="button">Ler o QR do cupom</button>
+      <div id="camera" hidden>
+        <video id="video" playsinline muted></video>
+        <button class="sec" id="fechaCam" type="button">Cancelar leitura</button>
+      </div>
+      <label for="codigo">ou digite o código do cupom</label>
+      <input id="codigo" class="cod" type="text" inputmode="text" autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="14" placeholder="XB-ABC123">
+      <button class="sec" id="conferir" type="button">Conferir código</button>
+      <div class="err" id="erro" hidden></div>
+      <details id="perdeu" style="margin-top:14px">
+        <summary style="cursor:pointer;font-weight:700">Cliente perdeu o cupom? Buscar pelo celular</summary>
+        <label for="telBusca" style="margin-top:10px;display:block">Celular do cliente (com DDD)</label>
+        <input id="telBusca" type="tel" inputmode="tel" autocomplete="off" maxlength="16" placeholder="(62) 9XXXX-XXXX">
+        <button class="sec" id="buscar" type="button">Buscar cupom pelo celular</button>
+      </details>
+    </section>
+
+    <div id="resultado" hidden></div>
+
+    <section id="calc" hidden>
+      <h2>Valor do desconto (5% sem cigarros)</h2>
+      <div class="linha">
+        <div><label for="total">Total da compra (R$)</label><input id="total" type="text" inputmode="decimal" placeholder="0,00"></div>
+        <div><label for="cig">Cigarros (R$)</label><input id="cig" type="text" inputmode="decimal" placeholder="0,00"></div>
+      </div>
+      <div class="res valido" id="calcRes" style="margin-top:12px" hidden><div class="st" id="calcVal"></div><div class="det" id="calcDet"></div></div>
+    </section>
+
+    <section>
+      <h2>Últimas conferências</h2>
+      <ul class="hist" id="hist"></ul>
+      <p class="msg" id="histVazio">Nada conferido ainda neste celular.</p>
+    </section>
+  </div>
+</main>
+
+<script src="jsQR.js"></script>
+<script>
+/* ===== PRÉVIA: servidor simulado (6 caixas), nenhum dado real ===== */
+(function(){
+  var K='xbd_usados', usados={};
+  try{ usados=JSON.parse(localStorage.getItem(K)||'{}') }catch(x){ usados={} }
+  var salva=function(){ try{ localStorage.setItem(K,JSON.stringify(usados)) }catch(x){} };
+  var CAIXAS=['Maria','João','Ana','Pedro','Luiza','Carlos'];
+  var norm=function(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim() };
+  var acha=function(q){ var a=norm(q); if(!a) return null; for(var i=0;i<CAIXAS.length;i++){ if(norm(CAIXAS[i])===a) return CAIXAS[i] } return null };
+  var hhmm=function(iso){ var d=new Date(iso); return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2) };
+  function painel(){
+    var el=document.getElementById('regSim'); if(!el) return;
+    var ks=Object.keys(usados);
+    el.innerHTML = ks.length ? ks.map(function(c){ return 'XB-'+c+' → <b>'+usados[c].por+'</b> às '+hhmm(usados[c].em) }).join('<br>') : 'Nenhum desconto validado ainda.';
+  }
+  var pins={}, falhas={};
+  try{ pins=JSON.parse(localStorage.getItem('xbd_pins')||'{}') }catch(x){ pins={} }
+  var salvaPins=function(){ try{ localStorage.setItem('xbd_pins',JSON.stringify(pins)) }catch(x){} };
+  window.__zerarPrevia=function(){ usados={}; salva(); pins={}; salvaPins(); try{localStorage.removeItem('xbd_hist');localStorage.removeItem('xbd_pin');localStorage.removeItem('xbd_nome')}catch(x){} location.reload() };
+  window.__painelPrevia=painel;
+  var base={
+    'VALID1':{estado:'valido',nome:'Maria S.',tel_final:'4321',valido_ate_dia:'17/10',pct:5},
+    'VALID2':{estado:'valido',nome:'Rui T.',tel_final:'1188',valido_ate_dia:'17/10',pct:5},
+    'VALID3':{estado:'valido',nome:'Bia M.',tel_final:'9090',valido_ate_dia:'17/10',pct:5},
+    'TESTE1':{estado:'valido',nome:'Cliente de teste',tel_final:'0000',valido_ate_dia:'17/10',pct:5},
+    'USADO1':{estado:'usado',nome:'João P.',usado_em:new Date(Date.now()-3600e3*3).toISOString(),usado_por:'Ana',pct:5},
+    'VENCI1':{estado:'vencido',nome:'Ana L.',valido_ate_dia:'05/10',pct:5}
+  };
+  function resp(q){
+    var p=new URLSearchParams(q), c=(p.get('codigo')||'').replace(/^XB-/,'');
+    var quem=acha(p.get('quem')); if(!quem) return {ok:false,erro:'nome'};
+    var pin=(p.get('pin')||'').trim(), chave=norm(quem);
+    if((falhas[chave]||0)>=5) return {ok:false,erro:'bloqueado'};
+    if(!/^\d{4}$/.test(pin)) return {ok:false,erro:'pin_formato'};
+    if(pin!=='1234'){ falhas[chave]=(falhas[chave]||0)+1; return {ok:false,erro:'pin'} }
+    falhas[chave]=0;
+    if(p.get('acao')==='buscar'){
+      var tel=(p.get('telefone')||'').replace(/\D/g,''), mapa={'62911112222':'VALID2','62933334444':'VALID3'};
+      c=mapa[tel]; if(!c) return {ok:true,estado:'inexistente',caixa:quem};
+      var rb=JSON.parse(JSON.stringify(base[c])); rb.caixa=quem; rb.codigo=c;
+      if(usados[c]){ rb.estado='usado'; rb.usado_em=usados[c].em; rb.usado_por=usados[c].por }
+      rb.ok=true; return rb;
+    }
+    if(c==='XXXXXX') return {ok:true,caixa:quem};
+    var r=base[c]; if(!r) return {ok:true,estado:'inexistente',caixa:quem};
+    r=JSON.parse(JSON.stringify(r)); r.caixa=quem;
+    if(r.estado==='valido'){
+      if(usados[c]){ r.estado='usado'; r.usado_em=usados[c].em; r.usado_por=usados[c].por; if(p.get('acao')==='usar') r.ja=true }
+      else if(p.get('acao')==='usar'){ usados[c]={em:new Date().toISOString(),por:quem}; salva(); r.estado='usado_agora'; r.usado_por=quem; painel() }
+    }
+    r.ok=true; return r;
+  }
+  window.fetch=function(u){ var q=String(u).split('?')[1]||''; return new Promise(function(ok){ setTimeout(function(){ ok({json:function(){return Promise.resolve(resp(q))}}) },350) }) };
+  setTimeout(painel,0);
+})();
+
+/* ======= Configuração (a mesma URL da tela do cliente) ======= */
+var EXEC_URL = 'https://previa.invalid/exec';   /* vem de ../config.js (o mesmo da tela do cliente). Vazio = desligado. */
+
+(function(){
+  var $ = function(s){return document.querySelector(s)};
+  var pct = 5, atual = null, stream = null, rodando = false;
+
+  function guarda(k,v){try{localStorage.setItem(k,v)}catch(x){}}
+  function le(k){try{return localStorage.getItem(k)}catch(x){return null}}
+  function apaga(k){try{localStorage.removeItem(k)}catch(x){}}
+
+  function chamar(qs,cb,ms){
+    var feito=false, fim=function(r){if(!feito){feito=true;cb(r)}};
+    var u=EXEC_URL+(EXEC_URL.indexOf('?')>=0?'&':'?')+qs;
+    setTimeout(function(){fim(null)},ms||8000);
+    function jsonp(){
+      try{
+        var n='xbc'+Date.now()+Math.floor(Math.random()*1000), sc=document.createElement('script');
+        window[n]=function(r){fim(r);try{delete window[n]}catch(x){}};
+        sc.src=u+'&callback='+n; sc.onerror=function(){fim(null)}; document.head.appendChild(sc);
+      }catch(x){fim(null)}
+    }
+    try{ fetch(u).then(function(r){return r.json()}).then(fim).catch(jsonp) }catch(x){ jsonp() }
+  }
+
+  function mostra(id){ ['desligado','telaPin','telaBalcao'].forEach(function(k){$('#'+k).hidden=(k!==id)}); $('#sair').hidden=(id!=='telaBalcao') }
+  function erro(m){var e=$('#erro');e.hidden=!m;e.textContent=m||''}
+
+  /* ---- código a partir de texto, link ou QR ---- */
+  function extraiCodigo(t){
+    t=String(t||'').toUpperCase();
+    var h=t.lastIndexOf('#'); if(h>=0) t=t.slice(h+1);      /* link do QR: vale o que vem depois do # */
+    t=t.trim();
+    var m=/^XB[-_ ]?([A-Z0-9]{6})$/.exec(t);                /* exato: letras a mais NÃO são cortadas em silêncio */
+    if(m) return m[1];
+    var s=t.replace(/[\s-]/g,'');
+    return /^[A-Z0-9]{6}$/.test(s) ? s : '';
+  }
+
+  /* ---- senha ---- */
+  var criando=false;
+  function modoCriar(on){ criando=on; $('#primeiro').hidden=!on; $('#pinOk').textContent=on?'Criar minha senha e entrar':'Entrar'; if(!on) $('#pin2').value='' }
+  function entrarComPin(pin,nome,criar,cb){
+    chamar('acao=validar&codigo=XXXXXX&pin='+encodeURIComponent(pin)+'&quem='+encodeURIComponent(nome)+(criar?'&criar=1':''),function(r){
+      if(!r) return cb('sem_resposta');
+      if(r.ok===false && r.erro) return cb(r.erro);
+      cb(r.ok ? {nome:r.caixa||nome} : 'sem_resposta');
+    });
+  }
+  /* o servidor derrubou o acesso (senha zerada, bloqueio, nome desligado): volta para a entrada */
+  function desloga(r){
+    if(r && r.ok===false && ['pin','nome','bloqueado','criar','pin_formato'].indexOf(r.erro)>=0){ apaga('xbd_pin'); apaga('xbd_nome'); mostraQuem(); mostra('telaPin'); return true }
+    return false;
+  }
+  $('#nomeCaixa').addEventListener('input',function(){ if(criando) modoCriar(false) });
+  function mostraQuem(){ var q=$('#quem'), n=le('xbd_nome'); q.hidden=!n; q.textContent=n?('Caixa: '+n):'' }
+  $('#pinOk').onclick=function(){
+    var pin=$('#pin').value.trim(), nome=$('#nomeCaixa').value.trim().replace(/[<>]/g,''), e=$('#pinErr');
+    e.hidden=true;
+    if(nome.length<2){e.hidden=false;e.textContent='Digite o seu primeiro nome.';return}
+    if(!/^\d{4}$/.test(pin)){e.hidden=false;e.textContent='A senha tem 4 números.';return}
+    if(criando && $('#pin2').value.trim()!==pin){e.hidden=false;e.textContent='As duas senhas não são iguais. Digite de novo.';return}
+    var rotulo=criando?'Criar minha senha e entrar':'Entrar';
+    $('#pinOk').disabled=true; $('#pinOk').textContent='Conferindo…';
+    entrarComPin(pin,nome,criando,function(r){
+      $('#pinOk').disabled=false; $('#pinOk').textContent=rotulo;
+      if(r && r.nome){ guarda('xbd_pin',pin); guarda('xbd_nome',r.nome); $('#pin').value=''; $('#nomeCaixa').value=''; modoCriar(false); mostraQuem(); iniciaBalcao(); return }
+      if(r==='criar'){ modoCriar(true); e.hidden=false; e.textContent='Primeira vez de '+nome+': repita a senha abaixo para criar.'; $('#pin2').focus(); return }
+      e.hidden=false;
+      e.textContent = r==='pin' ? 'Senha incorreta.'
+        : r==='nome' ? 'Esse nome não está na lista de caixas. Peça ao dono para incluir você.'
+        : r==='bloqueado' ? 'Muitas tentativas erradas. Espere 10 minutos ou peça ao dono para zerar a sua senha.'
+        : r==='pin_fraco' ? 'Senha fácil demais (como 1234 ou 0000). Escolha outra de 4 números.'
+        : r==='pin_formato' ? 'A senha tem 4 números.'
+        : 'Sem conexão com a planilha. Tente de novo.';
+    });
+  };
+  $('#sair').onclick=function(){ modoCriar(false); apaga('xbd_pin'); apaga('xbd_nome'); mostraQuem(); paraCamera(); $('#resultado').hidden=true; $('#calc').hidden=true; mostra('telaPin') };
+
+  /* ---- balcão ---- */
+  function iniciaBalcao(){
+    mostra('telaBalcao'); desenhaHist();
+    var h=extraiCodigo(location.hash);
+    if(h){ $('#codigo').value='XB-'+h; confere(h); try{history.replaceState(null,'',location.pathname)}catch(x){} }
+  }
+  function confere(cod){
+    erro(''); $('#resultado').hidden=true; $('#calc').hidden=true; atual=null;   /* nunca deixa o cartão do cliente anterior na tela */
+    cod=extraiCodigo(cod);
+    if(!cod){ erro('Digite o código do cupom: XB- e mais 6 letras ou números.'); return }
+    var btn=$('#conferir'); btn.disabled=true; btn.textContent='Conferindo…';
+    chamar('acao=validar&codigo='+encodeURIComponent('XB-'+cod)+'&pin='+encodeURIComponent(le('xbd_pin')||'')+'&quem='+encodeURIComponent(le('xbd_nome')||''),function(r){
+      btn.disabled=false; btn.textContent='Conferir código';
+      if(!r){ erro('Sem conexão com a planilha. Confira a internet e tente de novo.'); return }
+      if(desloga(r)) return
+      atual={codigo:cod,r:r}; renderResultado(r,cod,false);
+      registraHist(cod,r.estado,r.nome);
+    });
+  }
+  function renderResultado(r,cod,aposUsar){
+    var el=$('#resultado'); el.hidden=false;
+    var st=r.estado, h='', cls=st;
+    pct = r.pct || pct;
+    if(st==='valido'){
+      h='<div class="st">CUPOM VÁLIDO</div><div class="nome">'+esc(r.nome)+'</div>'+
+        '<div class="det">'+pct+'% em toda a compra, exceto cigarros<br>válido até '+esc(r.valido_ate_dia)+' · celular final '+esc(r.tel_final)+'</div>'+
+        '<button class="go" id="usar" type="button">Usar agora (marcar como usado)</button>';
+    } else if(st==='usado_agora'){
+      h='<div class="st">DESCONTO LIBERADO</div><div class="nome">'+esc(r.nome)+'</div>'+
+        '<div class="reg">Aplique <b>'+pct+'%</b> sobre o total <b>sem cigarros</b>.<br>Cupom marcado como usado por <b>'+esc(r.caixa||le('xbd_nome')||'')+'</b>.</div>'+
+        '<button class="sec" id="proximo" type="button">Próximo cliente</button>';
+    } else if(st==='usado'){
+      h='<div class="st">JÁ USADO</div><div class="nome">'+esc(r.nome)+'</div><div class="det">Usado em '+esc(fmtData(r.usado_em))+(r.usado_por?' por <b>'+esc(r.usado_por)+'</b>':'')+'</div>'+
+        '<button class="sec" id="proximo" type="button">Próximo cliente</button>';
+    } else if(st==='vencido'){
+      h='<div class="st">VENCIDO</div><div class="nome">'+esc(r.nome)+'</div><div class="det">Venceu em '+esc(r.valido_ate_dia)+'</div>'+
+        '<button class="sec" id="proximo" type="button">Próximo cliente</button>';
+    } else {
+      h='<div class="st">NÃO ENCONTRADO</div><div class="det">Esse código não existe. Confira as letras e tente de novo.</div>'+
+        '<button class="sec" id="proximo" type="button">Tentar outro</button>';
+    }
+    el.className='res '+cls; el.innerHTML=h;
+    var u=$('#usar'); if(u) u.onclick=usarAgora;
+    var p=$('#proximo'); if(p) p.onclick=proximo;
+    $('#calc').hidden=!(st==='valido'||st==='usado_agora');
+    recalc();
+    try{ el.scrollIntoView({behavior:'smooth',block:'center'}) }catch(x){}
+  }
+  function usarAgora(){
+    if(!atual) return;
+    var b=$('#usar'); b.disabled=true; b.textContent='Marcando…';
+    chamar('acao=usar&codigo='+encodeURIComponent('XB-'+atual.codigo)+'&pin='+encodeURIComponent(le('xbd_pin')||'')+'&quem='+encodeURIComponent(le('xbd_nome')||''),function(r){
+      if(!r){ b.disabled=false; b.textContent='Usar agora (marcar como usado)'; erro('Sem conexão. Não foi marcado como usado; tente de novo.'); return }
+      if(desloga(r)) return
+      if(r.estado==='usado_agora'){ registraHist(atual.codigo,'usado_agora',r.nome) }
+      renderResultado(r,atual.codigo,true);
+    });
+  }
+  function proximo(){
+    atual=null; $('#resultado').hidden=true; $('#calc').hidden=true; $('#codigo').value=''; erro('');
+    $('#total').value=''; $('#cig').value='';
+    try{ window.scrollTo({top:0,behavior:'smooth'}) }catch(x){}
+  }
+  $('#conferir').onclick=function(){confere($('#codigo').value)};
+  /* cliente perdeu o cupom: o caixa (já identificado) busca pelo celular e recebe o código */
+  $('#buscar').onclick=function(){
+    erro(''); $('#resultado').hidden=true; $('#calc').hidden=true; atual=null;
+    var tel=$('#telBusca').value.replace(/\D/g,'');
+    if(tel.length!==11){ erro('Digite o celular completo, com DDD e o 9.'); return }
+    var btn=$('#buscar'); btn.disabled=true; btn.textContent='Buscando…';
+    chamar('acao=buscar&telefone='+encodeURIComponent(tel)+'&pin='+encodeURIComponent(le('xbd_pin')||'')+'&quem='+encodeURIComponent(le('xbd_nome')||''),function(r){
+      btn.disabled=false; btn.textContent='Buscar cupom pelo celular';
+      if(!r){ erro('Sem conexão com a planilha. Confira a internet e tente de novo.'); return }
+      if(desloga(r)) return
+      if(r.estado==='inexistente' || !r.codigo){ erro('Nenhum cadastro com esse celular. Confira os números ou peça para o cliente se cadastrar.'); return }
+      $('#codigo').value='XB-'+r.codigo; $('#telBusca').value=''; $('#perdeu').open=false;
+      atual={codigo:r.codigo,r:r}; renderResultado(r,r.codigo,false); registraHist(r.codigo,r.estado,r.nome);
+    });
+  };
+  $('#telBusca').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); $('#buscar').click() } });
+  $('#codigo').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); confere($('#codigo').value) } });
+
+  /* ---- calculadora do desconto ---- */
+  function num(v){
+    v=String(v||'').trim(); if(/^-/.test(v)) return 0;
+    v=v.replace(/[^\d.,]/g,''); if(!v) return 0;
+    var c=v.lastIndexOf(','), p=v.lastIndexOf('.');
+    if(c>=0 && p>=0){ v = c>p ? v.replace(/\./g,'').replace(',','.') : v.replace(/,/g,'') }   /* o último símbolo é o decimal */
+    else if(c>=0){ v=v.replace(/,(?=.*,)/g,'').replace(',','.') }
+    else if(p>=0){
+      var q=v.split('.');
+      if(q.length>2) v=q.join('');                                  /* 1.234.567 */
+      else if(q[1].length===3 && q[0]!=='0' && q[0].length<=3) v=q.join('');   /* 1.234 = mil duzentos e trinta e quatro */
+      /* senão é decimal: 100.50 = cem e cinquenta */
+    }
+    var n=parseFloat(v); return isNaN(n)||n<0?0:n;
+  }
+  function brl(n){ return 'R$ '+n.toFixed(2).replace('.',',') }
+  function recalc(){
+    var t=num($('#total').value), c=num($('#cig').value), res=$('#calcRes');
+    if(t<=0){ res.hidden=true; return }
+    if(c>t){ res.hidden=false; res.className='res vencido'; $('#calcVal').textContent='Confira os valores'; $('#calcDet').textContent='Cigarros ('+brl(c)+') maior que o total ('+brl(t)+').'; return }
+    if(t>20000){ res.hidden=false; res.className='res vencido'; $('#calcVal').textContent='Confira o total'; $('#calcDet').textContent='O total digitado ('+brl(t)+') está muito alto. Use vírgula nos centavos.'; return }
+    var base=Math.max(t-c,0), d=Math.round(base*pct)/100;
+    res.hidden=false; res.className='res valido'; $('#calcVal').textContent='Desconto: '+brl(d);
+    $('#calcDet').textContent=pct+'% de '+brl(base)+' (total '+brl(t)+(c>0?' menos cigarros '+brl(c):'')+')  ·  a pagar: '+brl(t-d);
+  }
+  $('#total').addEventListener('input',recalc); $('#cig').addEventListener('input',recalc);
+
+  /* ---- histórico local ---- */
+  var ROT={valido:'válido',usado_agora:'liberado',usado:'já usado',vencido:'vencido',inexistente:'não existe'};
+  function hist(){ try{return JSON.parse(le('xbd_hist')||'[]')}catch(x){return []} }
+  function registraHist(cod,estado,nome){
+    var h=hist(); h.unshift({c:cod,e:estado,n:nome||'',t:Date.now()}); h=h.slice(0,10); guarda('xbd_hist',JSON.stringify(h)); desenhaHist();
+  }
+  function desenhaHist(){
+    var h=hist(), ul=$('#hist'); ul.innerHTML='';
+    $('#histVazio').hidden=h.length>0;
+    h.forEach(function(i){
+      var d=new Date(i.t), hh=('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+      var li=document.createElement('li');
+      li.innerHTML='<span>XB-'+esc(i.c)+(i.n?' · '+esc(i.n):'')+'</span><span class="e-'+esc(i.e)+'">'+esc(ROT[i.e]||i.e)+' · '+hh+'</span>';
+      ul.appendChild(li);
+    });
+  }
+
+  /* ---- câmera e leitura do QR ---- */
+  var detector = null;
+  try{ if('BarcodeDetector' in window) detector = new BarcodeDetector({formats:['qr_code']}) }catch(x){ detector=null }
+  function paraCamera(){
+    rodando=false;
+    if(stream){ stream.getTracks().forEach(function(t){t.stop()}); stream=null }
+    $('#camera').hidden=true; $('#video').srcObject=null;
+  }
+  function decodificaCanvas(cv){
+    var ctx=cv.getContext('2d'), im=ctx.getImageData(0,0,cv.width,cv.height);
+    var r=window.jsQR && jsQR(im.data,im.width,im.height,{inversionAttempts:'dontInvert'});
+    return r ? r.data : '';
+  }
+  $('#lerQr').onclick=function(){
+    erro('');
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ erro('Este navegador não deixa usar a câmera. Digite o código do cupom.'); return }
+    navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false}).then(function(s){
+      stream=s; var v=$('#video'); v.srcObject=s; v.setAttribute('playsinline','true');
+      $('#camera').hidden=false; rodando=true;
+      v.play().then(loop,loop);
+    }).catch(function(){ erro('Não foi possível abrir a câmera. Permita o uso da câmera ou digite o código do cupom.') });
+  };
+  $('#fechaCam').onclick=paraCamera;
+  var cv=document.createElement('canvas');
+  function loop(){
+    if(!rodando) return;
+    var v=$('#video');
+    if(v.readyState>=2 && v.videoWidth){
+      var texto='';
+      var fim=function(){
+        var c=extraiCodigo(texto);
+        if(c){ paraCamera(); $('#codigo').value='XB-'+c; confere(c); return }
+        setTimeout(loop,120);
+      };
+      if(detector){
+        detector.detect(v).then(function(rs){ texto = rs && rs[0] ? rs[0].rawValue : ''; fim() }).catch(function(){ detector=null; fim() });
+      } else {
+        var w=Math.min(v.videoWidth,640), h=Math.round(w*v.videoHeight/v.videoWidth);
+        cv.width=w; cv.height=h; cv.getContext('2d').drawImage(v,0,0,w,h);
+        texto=decodificaCanvas(cv); fim();
+      }
+    } else setTimeout(loop,120);
+  }
+
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function fmtData(iso){
+    var d=new Date(iso); if(isNaN(d.getTime())) return '—';
+    var p=function(n){return ('0'+n).slice(-2)};
+    return p(d.getDate())+'/'+p(d.getMonth()+1)+' às '+p(d.getHours())+':'+p(d.getMinutes());
+  }
+
+  /* aplicativo já aberto e o link do QR chega depois (#XB-...): confere sozinho */
+  window.addEventListener('hashchange',function(){
+    var h=extraiCodigo(location.hash);
+    if(h && le('xbd_pin') && le('xbd_nome') && !$('#telaBalcao').hidden){ $('#codigo').value='XB-'+h; confere(h); try{history.replaceState(null,'',location.pathname)}catch(x){} }
+  });
+
+  /* ---- ganchos de teste e início ---- */
+  window.__xb = { decodificaCanvas: decodificaCanvas, extraiCodigo: extraiCodigo };
+  
+  if(!EXEC_URL){ mostra('desligado') }
+  else if(!le('xbd_pin') || !le('xbd_nome')){ mostra('telaPin') }
+  else { mostraQuem(); iniciaBalcao() }
+})();
+</script>
+</body>
+</html>

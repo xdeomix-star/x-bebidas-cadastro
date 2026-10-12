@@ -74,8 +74,8 @@ video{width:100%;border-radius:14px;background:#000;aspect-ratio:1;object-fit:co
     <h2>Entrar no balcão</h2>
     <label for="nomeCaixa">Seu primeiro nome</label>
     <input id="nomeCaixa" type="text" autocomplete="off" autocapitalize="words" maxlength="30" placeholder="ex.: Maria">
-    <label for="pin">Senha da loja (8 números)</label>
-    <input id="pin" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="8" placeholder="••••••••">
+    <label for="pin">Senha da loja (4 números)</label>
+    <input id="pin" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="4" placeholder="••••">
     <div id="primeiro" hidden>
       <p class="msg" style="color:var(--ok);font-weight:700;margin:10px 0 4px">Primeiro acesso: crie a sua senha de 4 números.</p>
       <label for="pin2">Digite a mesma senha de novo</label>
@@ -189,7 +189,7 @@ var EXEC_URL = (window.XB_CONFIG && window.XB_CONFIG.EXEC_URL) || '';   /* vem d
     var pin=$('#pin').value.trim(), nome=$('#nomeCaixa').value.trim().replace(/[<>]/g,''), e=$('#pinErr');
     e.hidden=true;
     if(nome.length<2){e.hidden=false;e.textContent='Digite o seu primeiro nome.';return}
-    if(!/^\d{8}$/.test(pin)){e.hidden=false;e.textContent='A senha tem 8 números.';return}
+    if(!/^\d{4}$/.test(pin)){e.hidden=false;e.textContent='A senha tem 4 números.';return}
     if(criando && $('#pin2').value.trim()!==pin){e.hidden=false;e.textContent='As duas senhas não são iguais. Digite de novo.';return}
     var rotulo=criando?'Criar minha senha e entrar':'Entrar';
     $('#pinOk').disabled=true; $('#pinOk').textContent='Conferindo…';
@@ -202,7 +202,7 @@ var EXEC_URL = (window.XB_CONFIG && window.XB_CONFIG.EXEC_URL) || '';   /* vem d
         : r==='nome' ? 'Esse nome não está na lista de caixas. Peça ao dono para incluir você.'
         : r==='bloqueado' ? 'Muitas tentativas erradas. Espere 10 minutos ou peça ao dono para zerar a sua senha.'
         : r==='pin_fraco' ? 'Senha fácil demais (como 1234 ou 0000). Escolha outra de 4 números.'
-        : r==='pin_formato' ? 'A senha tem 8 números.'
+        : r==='pin_formato' ? 'A senha tem 4 números.'
         : 'Sem conexão com a planilha. Tente de novo.';
     });
   };
