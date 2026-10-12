@@ -229,6 +229,14 @@ summary{min-height:44px;display:flex;align-items:center}
 .qrbox .cod{font-family:var(--f-display);font-weight:800;font-size:1.5rem;letter-spacing:.14em}
 .qrbox small{color:#4a4640;font-size:.82rem;text-align:center;line-height:1.3}
 .ticket .info span:empty{display:none}
+.clausula{margin:12px 0 4px;padding:10px 12px;border:2px solid #111;border-radius:6px;background:#fff;color:#111;font-weight:800;font-size:13px;line-height:1.3;text-align:center;letter-spacing:.01em}
+#gate18{position:fixed;inset:0;z-index:99999;background:#0a0b0c;display:none;align-items:center;justify-content:center;padding:24px;text-align:center;color:#f8f3e9}
+#gate18 .caixa{max-width:380px;width:100%}
+#gate18 h2{font-size:1.6rem;margin:0 0 8px}
+#gate18 p{margin:0 0 18px;opacity:.9;line-height:1.45}
+#gate18 button{display:block;width:100%;min-height:56px;border-radius:14px;border:0;font-size:1.05rem;font-weight:800;cursor:pointer;margin-top:10px}
+#gate18 .sim{background:linear-gradient(#ff9a55,#ff6600);color:#1a0b00}
+#gate18 .nao{background:transparent;color:#f8f3e9;border:1.5px solid #5b5b5b}
 </style>
 
 <div class="wrap">
@@ -238,10 +246,11 @@ summary{min-height:44px;display:flex;align-items:center}
   </header>
 
   <div class="grid">
+    <div class="clausula" role="note" aria-label="Advertência">BEBA COM MODERAÇÃO · CERVEJA É BEBIDA ALCOÓLICA. VENDA E CONSUMO PROIBIDOS PARA MENORES DE 18 ANOS.</div>
     <!-- HERÓI -->
     <section>
-      <div class="eyebrow" id="eyebrow">Seu desconto está esperando</div>
-      <div class="hl"><h1 id="h1">Ganhe <span class="gold">5% OFF</span> na sua 1ª compra.</h1><div class="sticker" aria-hidden="true"><b id="stPct">5%</b><span>OFF</span></div></div>
+      <div class="eyebrow" id="eyebrow">Cadastro rápido · 2 passos</div>
+      <div class="hl"><h1 id="h1"><span class="gold">5% OFF</span> na sua 1ª compra.</h1><div class="sticker" aria-hidden="true"><b id="stPct">5%</b><span>OFF</span></div></div>
       
       
       <div class="art" aria-hidden="true">
@@ -277,7 +286,8 @@ summary{min-height:44px;display:flex;align-items:center}
           <div class="avisoGrupo" id="avisoGrupo" hidden><b>Grupo do WhatsApp:</b> promoções e ações exclusivas para quem participa.</div>
           <label class="chk" for="ok1"><input id="ok1" type="checkbox"><span>Tenho 18 anos ou mais e autorizo o uso dos meus dados no cadastro.<small>Você pode pedir para apagar quando quiser.</small></span></label>
           <div class="err" id="ok1-e" hidden></div>
-          <label class="chk" for="ok2"><input id="ok2" type="checkbox"><span>Quero ofertas por WhatsApp.<small>Opcional. Responda SAIR para parar.</small></span></label>
+          <label class="chk" for="ok2"><input id="ok2" type="checkbox"><span>Quero entrar no grupo do WhatsApp.<small>Opcional.</small></span></label>
+          <label class="chk" for="ok3"><input id="ok3" type="checkbox"><span>Quero receber ofertas da X Bebidas no meu WhatsApp.<small>Opcional. Só para maiores de 18 anos. Responda SAIR para parar.</small></span></label>
           <button class="go pulse" type="submit">Quero meus 5% →</button>
           <p class="prox" id="avisoEnvio" role="alert" hidden style="color:#ffb4a8;font-weight:600"></p>
           <p class="prox">Seu cupom aparece na próxima tela.</p>
@@ -286,6 +296,8 @@ summary{min-height:44px;display:flex;align-items:center}
         <details><summary>Para que a gente usa cada dado</summary>
           <dl>
             <div><dt>Nome</dt><dd>Para tratar você pelo nome.</dd></div>
+            
+            <div><dt>Data de nascimento</dt><dd>Para confirmar que você tem 18 anos ou mais e evitar cadastro repetido.</dd></div>
             
             <div><dt>Telefone</dt><dd>É assim que a gente reconhece você no caixa e, se você aceitar, fala no WhatsApp.</dd></div>
             
@@ -334,7 +346,7 @@ summary{min-height:44px;display:flex;align-items:center}
     </section>
   </div>
 
-  <p class="foot">X Bebidas · Venda proibida para menores de 18 anos · Beba com moderação. Imagem ilustrativa; Heineken® é marca de seus titulares.</p>
+  <p class="foot">X Bebidas · BEBA COM MODERAÇÃO. VENDA E CONSUMO PROIBIDOS PARA MENORES DE 18 ANOS. Imagem ilustrativa; Heineken® é marca de seus titulares.</p>
 </div>
 
 <script>/* qrcode-generator 1.4.4, MIT, Kazuhiko Arase */
@@ -1984,7 +1996,7 @@ var qrcode = function() {
     {n:'Vodka ou Gin', c:'Vodka ou Gin'},
     {n:'Outra bebida', c:'Outra', outra:true}
   ];
-  var TEXTO_VERSAO = 'v2-2026-10-12';          /* mude quando mudar o texto de consentimento: vai para a planilha em texto_versao */
+  var TEXTO_VERSAO = 'v3-2026-10-12';          /* mude quando mudar o texto de consentimento: vai para a planilha em texto_versao */
   var $ = function(s){return document.querySelector(s)};
   var tok = (location.hash||'').replace('#','').toLowerCase();
   var origem = (/^[a-z0-9_-]{1,20}$/.test(tok) && tok !== 'limpar') ? tok : 'link';
@@ -1995,13 +2007,8 @@ var qrcode = function() {
   function fmtDia(d){return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)}
   function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 
-  /* contexto do momento: o título conversa com a hora e o dia */
-  (function(){
-    var d=hoje.getDay(), h=hoje.getHours(), t='Seu desconto está esperando';
-    if((d===5&&h>=15)||d===6||d===0) t='O fim de semana pede gelada';
-    else if(h>=17||h<3) t='A noite pede gelada';
-    $('#eyebrow').textContent=t;
-  })();
+  /* Conar (Súmula 9): sem apelo de consumo no topo. Texto fixo e neutro. */
+  (function(){ $('#eyebrow').textContent='Cadastro rápido · 2 passos'; })();
 
   /* passo 1: bebida escrita pelo cliente, com sugestões */
   /* nomes dos produtos mais vendidos (cadastro do Adeggo, 6 meses até 02/09/2026): m = como o cliente vê, a = escrita exata no Adeggo */
@@ -2071,7 +2078,7 @@ var qrcode = function() {
   $('#voltaM').onclick=function(){passo('s1')};
   if(((location.hash||'').replace('#','').toLowerCase())==='balcao'){$('#outro').hidden=false}
   $('#outro').onclick=function(){bebida='';bebidaEnvio='';pick=null;$('#beb').value='';err('beb','');h1Inicial();$('#oferta').innerHTML='';passo('s1')};
-  function h1Inicial(){var sb=document.querySelector('#f button[type=submit]');if(sb)sb.textContent='Quero meus '+PCT+'% →';$('#to2').textContent='Quero meus '+PCT+'% →';$('#h1').innerHTML='Ganhe <span class="gold">'+PCT+'% OFF</span> na sua 1ª compra.';[].forEach.call(document.querySelectorAll('.sticker b'),function(b){b.textContent=PCT+'%'})}
+  function h1Inicial(){var sb=document.querySelector('#f button[type=submit]');if(sb)sb.textContent='Quero meus '+PCT+'% →';$('#to2').textContent='Quero meus '+PCT+'% →';$('#h1').innerHTML='<span class="gold">'+PCT+'% OFF</span> na sua 1ª compra.';[].forEach.call(document.querySelectorAll('.sticker b'),function(b){b.textContent=PCT+'%'})}
   h1Inicial();
   (function(){
     if(!GRUPO_URL)return;
@@ -2151,7 +2158,7 @@ var qrcode = function() {
     else if(proprio) txt='Este aparelho já fez um cadastro. Diga o seu celular no caixa ou no drive-thru: ele encontra o seu cupom.';
     else txt='Este celular já está cadastrado. Diga o seu celular no caixa ou no drive-thru: ele encontra o seu cupom.';
     $('#sjp').textContent=txt;
-    var g=$('#sjGrupo'); if(g){ if(GRUPO_URL){g.href=GRUPO_URL;g.hidden=false}else{g.hidden=true} }
+    var g=$('#sjGrupo'); if(g){ g.hidden=true }   /* o convite do grupo só aparece para quem marcou a caixa do grupo */
     $('#f').reset(); passo('sj');
   }
   $('#sjOutra').onclick=function(){try{localStorage.removeItem('xb_cadastro')}catch(x){} passo('s1')};
@@ -2200,7 +2207,7 @@ var qrcode = function() {
   $('#f').addEventListener('submit',function(ev){
     ev.preventDefault();
     var nome=$('#nome').value.replace(/<[^>]*>/g,'').replace(/[<>]/g,'').trim().replace(/\s+/g,' '), tel=$('#tel').value.replace(/\D/g,''),
-        ok1=$('#ok1').checked, ok2=$('#ok2').checked, nasc=lerNasc($('#nasc').value.trim());
+        ok1=$('#ok1').checked, ok2=$('#ok2').checked, ok3=$('#ok3').checked, nasc=lerNasc($('#nasc').value.trim());
     ['nome','nasc','tel','ok1'].forEach(function(k){err(k,'')});
     var primeiro=null, bad=function(id,m){err(id,m);if(!primeiro)primeiro=id};
     if(nome.length<2)bad('nome','Escreva o seu nome.');
@@ -2213,9 +2220,9 @@ var qrcode = function() {
     var seguir=function(){
     var q='nome='+encodeURIComponent(nome)+'&telefone='+encodeURIComponent(tel)+
           '&bebida='+encodeURIComponent(bebidaEnvio||bebida)+'&origem='+encodeURIComponent(origem)+
-          '&nasc='+encodeURIComponent(nasc.iso)+'&ok1=1&ok2='+(ok2?'1':'0')+'&tv='+encodeURIComponent(TEXTO_VERSAO);
+          '&nasc='+encodeURIComponent(nasc.iso)+'&ok1=1&ok2='+(ok2?'1':'0')+'&ok3='+(ok3?'1':'0')+'&tv='+encodeURIComponent(TEXTO_VERSAO);
     var gl=$('#grupoLink'); gl.hidden=true;
-    if(GRUPO_URL){ gl.href=GRUPO_URL; gl.hidden=false; $('#conviteGrupo').hidden=false;
+    if(GRUPO_URL && ok2){ gl.href=GRUPO_URL; gl.hidden=false; $('#conviteGrupo').hidden=false;
       gl.classList.toggle('pulse',!!ok2) }else{ $('#conviteGrupo').hidden=true }
     var nota=$('#confirmaNota'), aviso=$('#avisoEnvio');
     nota.textContent=''; aviso.hidden=true; aviso.textContent='';
@@ -2275,4 +2282,27 @@ var qrcode = function() {
 })();
 </script>
 
+<div id="gate18" role="dialog" aria-modal="true" aria-labelledby="g18t">
+  <div class="caixa">
+    <h2 id="g18t">Você tem 18 anos ou mais?</h2>
+    <p>Este site é destinado a maiores de 18 anos.</p>
+    <button type="button" class="sim" id="g18sim">Sim, tenho 18 anos ou mais</button>
+    <button type="button" class="nao" id="g18nao">Não</button>
+    <p id="g18msg" role="alert" style="display:none;margin-top:18px">Que pena. Este site é destinado a maiores de 18 anos. Venda e consumo proibidos para menores.</p>
+    <div class="clausula" style="margin-top:22px">BEBA COM MODERAÇÃO · CERVEJA É BEBIDA ALCOÓLICA. VENDA E CONSUMO PROIBIDOS PARA MENORES DE 18 ANOS.</div>
+  </div>
+</div>
+<script>
+(function(){
+  var g=document.getElementById('gate18'); if(!g) return;
+  var liberado=false; try{ liberado=localStorage.getItem('xb_18')==='1' }catch(x){}
+  var balcaoTab=((location.hash||'').replace('#','').toLowerCase()==='balcao');
+  if(liberado || balcaoTab) return;
+  g.style.display='flex';
+  var sim=document.getElementById('g18sim'), nao=document.getElementById('g18nao');
+  setTimeout(function(){ try{ sim.focus() }catch(x){} },50);
+  sim.onclick=function(){ try{ localStorage.setItem('xb_18','1') }catch(x){} g.style.display='none' };
+  nao.onclick=function(){ sim.style.display='none'; nao.style.display='none'; document.getElementById('g18msg').style.display='block' };
+})();
+</script>
 </body></html>
